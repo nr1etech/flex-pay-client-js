@@ -1,0 +1,36 @@
+{
+	"compilerOptions": {
+		"target": "ES2015",
+		"module": "CommonJS",
+		"lib": [
+			"ES2015",
+			"DOM"
+		],
+		"moduleResolution": "node",
+		"esModuleInterop": true,
+		"declaration": true,
+		"strict": true,
+		"noImplicitAny": true,
+		"strictNullChecks": true,
+		"noImplicitThis": true,
+		"alwaysStrict": true,
+		//"noUnusedLocals": true,
+		"noUnusedParameters": false,
+		"noImplicitReturns": true,
+		"noFallthroughCasesInSwitch": true,
+		"inlineSourceMap": true,
+		"inlineSources": true,
+		"experimentalDecorators": true,
+		"strictPropertyInitialization": true,
+		"removeComments": true,
+		"typeRoots": [
+			"./node_modules/@types"
+		]
+	},
+	"exclude": [
+		"node_modules"
+	],
+	"files": [
+		"node_modules/jest-expect-message/types/index.d.ts"
+	]
+}

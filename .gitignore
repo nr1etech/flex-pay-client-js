@@ -1,0 +1,22 @@
+.npmcache
+.idea
+.sw?
+*.d.ts
+*.env
+
+# nodeSJ
+node_modules
+
+#Type Script
+#packages/*/lib
+dist/
+tsconfig.tsbuildinfo
+
+# VSCode
+.vscode/*
+
+# Mac
+.ds_store
+
+# lerna
+lerna-debug.log
