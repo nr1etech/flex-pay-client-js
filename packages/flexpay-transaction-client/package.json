@@ -1,5 +1,5 @@
 {
-	"name": "@netradius/flexpay-transaction-client",
+	"name": "@logicl/flexpay-transaction-client",
 	"publishConfig": {
 		"access": "public"
 	},

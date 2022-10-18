@@ -1,10 +1,10 @@
-# NetRadius FlexPay Service Javascript Client
+# Logicl FlexPay Service Javascript Client
 
 This monorepo contains client packages for interfacing with the FlexPay Transaction API.
 
 ## Installation
 
-`npm install @netradius/flexplay-transaction-client`
+`npm install @logicl/flexplay-transaction-client`
 
 
 ## Developer Notes

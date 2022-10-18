@@ -1,20 +1,19 @@
-# FlexPay Transaction API Javascript Client by NetRadius
+# FlexPay Transaction API Javascript Client by Logicl
 
 
 ## Installation
 
-`npm install @netradius/flexpay-transaction-client`
+`npm install @logicl/flexpay-transaction-client`
 
 ## Usage
 
 ```typescript
-import { FlexPayTransactionClient } from "@netradius/flexpay-transaction-client";
+import { FlexPayTransactionClient } from "@logicl/flexpay-transaction-client";
 
-let baseUrl = "https://api.....";
-
-const client = new FlexPayTransactionClient(baseUrl, {
+const client = new FlexPayTransactionClient({
+	baseUrl: "https://api....",
 	authorizationToken: "abcd-1234",
 });
 
-const userInfo = await client.getInfo();
+const transactions = await client.transactions.getTransactionList();
 ```
