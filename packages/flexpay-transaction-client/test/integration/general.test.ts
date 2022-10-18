@@ -9,7 +9,7 @@ let client:FlexPayTransactionClient;
 beforeAll(() => {
 	consoleJson(undefined);	// Just calling this so TS doesn't complain about the import
 
-	GATEWAY_TOKEN = process.env["X_FP_GATEWAY_TOKEN"] ?? "CQRONAFI35MEHJ5SAGB5FLRAUI";
+	GATEWAY_TOKEN = process.env["X_FP_GATEWAY_TOKEN"] as string;
 	AUTHORIZATION_TOKEN = process.env["X_FP_AUTH_TOKEN"] as string;
 	client = new FlexPayTransactionClient({
 		authorizationToken: AUTHORIZATION_TOKEN,
