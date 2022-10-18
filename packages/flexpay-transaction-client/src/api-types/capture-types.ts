@@ -1,11 +1,11 @@
-import { Address } from "./common-types";
+import { AddressResponse } from "./common-types";
 import { GatewayType, TransactionStatus, TransactionType } from "./enum-types";
-import { TransactionPaymentMethod } from "./transaction-types";
+import { TransactionPaymentMethod, Response } from "./transaction-types";
 
 export interface CaptureRequest {
-	"amount": number | null;
+	"amount"?: number;
 	"merchantTransactionId": string;
-	"disableCustomerRecovery": boolean | null;
+	"disableCustomerRecovery"?: boolean;
 }
 
 export interface CaptureResponse {
@@ -21,26 +21,28 @@ export interface CaptureResponse {
 	"customerId": string;
 	"currencyCode": string;
 	"amount": number;
-	"gatewayToken": string;
-	"gatewayType": GatewayType;
-	"gatewayTransactionId": string;
-	"merchantAccountReferenceId": string;
-	"assignedGatewayToken": string;
-	"orderId": string;
-	"retryDate": Date;
+	"gatewayToken": string | null;
+	"gatewayType": GatewayType | null;
+	"gatewayTransactionId": string | null;
+	"merchantAccountReferenceId": string | null;
+	"assignedGatewayToken": string | null;
+	"orderId": string | null;
+	"retryDate": Date | null;
 	"retryCount": number;
 	"dateFirstAttempt": Date;
-	"description": string;
-	"customerIp": string;
-	"shippingAddress": Address;
+	"description": string | null
+	"productSku": string | null;	// FIXME -- not in documentation but returned in practice
+	"subscriptionId": string | null;	// FIXME -- not in documentation but returned in practice
+	"customerIp": string | null;
+	"shippingAddress": AddressResponse;
 	"referenceData": string;
 	"disableCustomerRecovery": boolean;
-	"customVariable1": string;
-	"customVariable2": string;
-	"customVariable3": string;
-	"customVariable4": string;
-	"customVariable5": string;
-	// Differs from other - paymentModel
+	"customVariable1": string | null;
+	"customVariable2": string | null;
+	"customVariable3": string | null;
+	"customVariable4": string | null;
+	"customVariable5": string | null;
+	// Differs from other - paymentModel not included
 	// FIXME -- Differs from Transaction (transaction-types) in only the GatewaySpecificFields properties
 
 }

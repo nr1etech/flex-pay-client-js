@@ -1,4 +1,4 @@
-import { Address } from "./common-types";
+import { AddressResponse } from "./common-types";
 import { CardType, GatewayType, PaymentMethodType, PaymentModel, StorageState, TransactionStatus, TransactionType } from "./enum-types";
 import { TransactionPaymentMethod, Response } from "./transaction-types";
 
@@ -89,7 +89,7 @@ export interface ChargeCreditCardResponse {
 	"dateFirstAttempt": Date;
 	"description": string;
 	"customerIp": string;
-	"shippingAddress": Address;
+	"shippingAddress": AddressResponse;
 	"referenceData": string;
 	"disableCustomerRecovery": boolean;
 	"customVariable1": string;
@@ -266,7 +266,7 @@ export interface ChargeGatewayPaymentMethodResponse {
 	"dateFirstAttempt": Date;
 	"description": string;
 	"customerIp": string;
-	"shippingAddress": Address;
+	"shippingAddress": AddressResponse;
 	"referenceData": string;
 	"disableCustomerRecovery": boolean;
 	"customVariable1": string;

@@ -1,4 +1,4 @@
-import { Address } from "./common-types";
+import { AddressResponse } from "./common-types";
 import { GatewayType, TransactionStatus, TransactionType } from "./enum-types";
 import { TransactionPaymentMethod } from "./transaction-types";
 
@@ -31,7 +31,7 @@ export interface RefundFullResponse {
 	"dateFirstAttempt": Date;
 	"description": string;
 	"customerIp": string;
-	"shippingAddress": Address;
+	"shippingAddress": AddressResponse;
 	"referenceData": string;
 	"disableCustomerRecovery": boolean;
 	"customVariable1": string;

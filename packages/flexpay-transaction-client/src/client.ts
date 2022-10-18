@@ -63,6 +63,7 @@ export class TransactionClient {
 		let requestData:string|undefined;
 		if (requestBody) {
 			requestData = (typeof requestBody === "string") ? requestBody : JSON.stringify(requestBody);
+			this.debugOutput && console.debug("REQUEST BODY:", requestData);
 		}
 
 		let responseBodyText:string|undefined = undefined;
@@ -88,7 +89,7 @@ export class TransactionClient {
 		}
 
 		this.debugOutput && console.debug("STATUS:", response.status);
-		this.debugOutput && console.debug("BODY:", responseBodyText);
+		this.debugOutput && console.debug("RESPONSE BODY:", responseBodyText);
 
 		if (response.status === 401 || response.status === 403) {	// AWS HTTP API Gateway returns 403 from the authorizer (instead of 401) if the credentials are invalid
 			throw new Errors.AuthorizationError("Authorization Failed");
@@ -101,7 +102,7 @@ export class TransactionClient {
 		}
 
 		try {
-			responseJson = responseBodyText && JSON.parse(responseBodyText);
+			responseJson = responseBodyText && JSON.parse(responseBodyText, this.jsonDateParser);
 		} catch (ex) {
 			throw new Errors.ResponseError("Invalid response content", { cause: responseBodyText});
 		}
@@ -151,4 +152,16 @@ export class TransactionClient {
 
 		return size;
 	}
+
+	private reIsoDateFormat = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2}(?:\.\d*))(?:Z|(\+|-)([\d|:]*))?$/;
+	private jsonDateParser = (key:string, value:unknown):unknown => {
+		if (typeof value === 'string') {
+			if (this.reIsoDateFormat.test(value)) {
+				return new Date(value);
+			}
+		}
+
+		return value;
+	}
+
 }

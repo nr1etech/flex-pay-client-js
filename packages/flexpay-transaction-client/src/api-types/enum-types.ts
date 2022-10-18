@@ -1,13 +1,14 @@
 export enum TransactionStatus {
 	Approved = 1,
-	Thing2 = 2,
+	Declined = 2,
+	Error = 3,
 }
 
 export enum TransactionType {
 	Authorize = "Authorize",
 	Charge = "Charge",
 	Capture = "Capture",
-	CreateGatewayPaymentMethod = "CreateGatewayPaymentMethod",
+	//CreateGatewayPaymentMethod = "CreateGatewayPaymentMethod",
 	Void = "Void",
 	Refund = "Refund",
 }
@@ -26,11 +27,15 @@ export enum GatewayType {
 export enum CardType {
 	AmericanExpress = "AMERICAN EXPRESS",
 	Visa = "VISA",
+	MasterCard = "MASTERCARD",
+	Jcb = "JCB",
+	DinersClub = "DINERS CLUB",
 }
 
 export enum StorageState {
 	Stored = "Stored",
-	Cachedd = "Cached",
+	Cached = "Cached",
+	Redacted = "Redacted",
 }
 
 export enum PaymentModel {

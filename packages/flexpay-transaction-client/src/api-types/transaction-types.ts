@@ -1,4 +1,4 @@
-import { Address } from "./common-types";
+import { AddressResponse } from "./common-types";
 import { CardType, GatewayType, PaymentMethodType, StorageState, TransactionStatus, TransactionType } from "./enum-types";
 
 export interface Transaction {
@@ -25,7 +25,7 @@ export interface Transaction {
 	"dateFirstAttempt": Date;
 	"description": string;
 	"customerIp": string;
-	"shippingAddress": Address;
+	"shippingAddress": AddressResponse;
 	"referenceData": string;
 	"disableCustomerRecovery": boolean;
 	"customVariable1": string;
@@ -49,39 +49,39 @@ export interface TransactionListItem {
 }
 
 export interface Response {
-	"avsCode": string;
-	"avsMessage": string;
-	"cvvCode": string;
-	"cvvMessage": string;
-	"errorCode": string;
-	"errorDetail": string;
+	"avsCode": string | null;
+	"avsMessage": string | null;
+	"cvvCode": string | null;
+	"cvvMessage": string | null;
+	"errorCode": string | null;
+	"errorDetail": string | null;
 }
 
 export interface TransactionPaymentMethod {
-	"paymentMethodId": string|null;
-	"creditCardNumber": string;
-	"expiryMonth": string;
-	"expiryYear": string;
-	"cvv": string|null;
-	"firstName": string|null;
-	"lastName": string|null;
-	"fullName": string|null;
+	"paymentMethodId": string;
+	"creditCardNumber": string | null;
+	"expiryMonth": string | null;
+	"expiryYear": string | null;
+	"cvv": string | null;
+	"firstName": string | null;
+	"lastName": string | null;
+	"fullName": string | null;
 	"customerId": string;
-	"address1": string;
-	"address2": string|null;
-	"postalCode": string;
-	"city": string;
-	"state": string;
-	"country": string;
-	"email": string;
-	"phoneNumber": string;
+	"address1": string | null;
+	"address2": string | null;
+	"postalCode": string | null;
+	"city": string | null;
+	"state": string | null;
+	"country": string | null;
+	"email": string | null;
+	"phoneNumber": string | null;
 	"paymentMethodType": PaymentMethodType;
-	"fingerprint": string|null;
+	"fingerprint": string | null;
 	"lastFourDigits": string;
 	"firstSixDigits": string;
-	"cardType": CardType;
-	"dateCreated": Date|null;
-	"storageState": StorageState|null;
+	"cardType": CardType | null;
+	"dateCreated": Date;
+	"storageState": StorageState;
 }
 
 export interface GatewaySpecificFieldsNested extends Record<string, unknown> { }
