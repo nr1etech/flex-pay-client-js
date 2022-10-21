@@ -8,7 +8,6 @@ export enum TransactionType {
 	Authorize = "Authorize",
 	Charge = "Charge",
 	Capture = "Capture",
-	//CreateGatewayPaymentMethod = "CreateGatewayPaymentMethod",
 	Void = "Void",
 	Refund = "Refund",
 }
@@ -30,6 +29,7 @@ export enum CardType {
 	MasterCard = "MASTERCARD",
 	Jcb = "JCB",
 	DinersClub = "DINERS CLUB",
+	Discover = "DISCOVER",
 }
 
 export enum StorageState {

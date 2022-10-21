@@ -6,6 +6,6 @@ export * from "./enum-types";
 export * from "./healthcheck-types";
 export * from "./paymentmethod-types";
 export * from "./refund-types";
+export * from "./sandbox-types";
 export * from "./transaction-types";
 export * from "./void-types";
-export * from "./sandbox-types";

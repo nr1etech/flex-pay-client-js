@@ -1,4 +1,4 @@
-import { AvsResponseCode, CvvResponseCode, ResponseCode, TransactionType } from "./enum-types";
+import { AvsResponseCode, CardType, CvvResponseCode, ResponseCode, TransactionType } from "./enum-types";
 
 export interface SandboxCreditCards {
 	visa: SandboxCreditCardValues;
@@ -14,6 +14,7 @@ interface SandboxCreditCardValues {
 	expiryMonth: string;
 	expiryYear: string;
 	cvv: string;
+	cardType: CardType;
 }
 
 export const sandboxCreditCards:Readonly<SandboxCreditCards> = Object.freeze({
@@ -22,46 +23,52 @@ export const sandboxCreditCards:Readonly<SandboxCreditCards> = Object.freeze({
 		expiryMonth: "07",
 		expiryYear: "2024",
 		cvv: "879",
+		cardType: CardType.Visa,
 	},
 	masterCard: {
 		creditCardNumber: "5244209084665514",
 		expiryMonth: "07",
 		expiryYear: "2024",
 		cvv: "010",
+		cardType: CardType.MasterCard,
 	},
 	amex: {
 		creditCardNumber: "341674949684898",
 		expiryMonth: "07",
 		expiryYear: "2024",
 		cvv: "1000",
+		cardType: CardType.AmericanExpress,
 	},
 	dinersClub: {
 		creditCardNumber: "30349475125576",
 		expiryMonth: "06",
 		expiryYear: "2024",
 		cvv: "100",
+		cardType: CardType.DinersClub,
 	},
 	jcb: {
 		creditCardNumber: "3530111333300000",
 		expiryMonth: "06",
 		expiryYear: "2024",
 		cvv: "100",
+		cardType: CardType.Jcb,
 	},
 	discover: {
 		creditCardNumber: "6011885753412897",
 		expiryMonth: "06",
 		expiryYear: "2024",
 		cvv: "100",
+		cardType: CardType.Discover,
 	},
 });
 
 export interface SandboxResponses {
-	SoftDeclineReferToCardIssuer: SandboxResponseAmount;
-	SoftDeclineDoNotHonor: SandboxResponseAmount;
-	SoftDeclineInsufficientFunds: SandboxResponseAmount;
-	HardDeclineInvalidTransaction: SandboxResponseAmount;
-	RiskBlockedTransaction: SandboxResponseAmount;
-	ApiValidationError: SandboxResponseAmount;
+	softDeclineReferToCardIssuer: SandboxResponseAmount;
+	softDeclineDoNotHonor: SandboxResponseAmount;
+	softDeclineInsufficientFunds: SandboxResponseAmount;
+	hardDeclineInvalidTransaction: SandboxResponseAmount;
+	riskBlockedTransaction: SandboxResponseAmount;
+	apiValidationError: SandboxResponseAmount;
 }
 
 interface SandboxResponseAmount {
@@ -69,80 +76,80 @@ interface SandboxResponseAmount {
 	responseCode: ResponseCode;
 }
 
-export const sandboxResponseCodeAmounts:Readonly<SandboxResponses> = Object.freeze({
-	SoftDeclineReferToCardIssuer: {
+const sandboxResponseCodeAmounts:Readonly<SandboxResponses> = Object.freeze({
+	softDeclineReferToCardIssuer: {
 		amount: 2005,
 		responseCode: ResponseCode.SoftDeclineReferToCardIssuer,
 	},
-	SoftDeclineDoNotHonor: {
+	softDeclineDoNotHonor: {
 		amount: 2008,
 		responseCode: ResponseCode.SoftDeclineDoNotHonor,
 	},
-	SoftDeclineInsufficientFunds: {
+	softDeclineInsufficientFunds: {
 		amount: 2012,
 		responseCode: ResponseCode.SoftDeclineInsufficientFunds,
 	},
-	HardDeclineInvalidTransaction: {
+	hardDeclineInvalidTransaction: {
 		amount: 3016,
 		responseCode: ResponseCode.HardDeclineInvalidTransaction,
 	},
-	RiskBlockedTransaction: {
+	riskBlockedTransaction: {
 		amount: 4018,
 		responseCode: ResponseCode.RiskBlockedTransaction,
 	},
-	ApiValidationError: {
+	apiValidationError: {
 		amount: 5023,
 		responseCode: ResponseCode.ApiValidationError,
 	},
 });
 
 export interface SandboxAvs {
-	ZipCodeDoesNotMatch: SandboxAvsCheckAddress1;
-	UnsupportedIndustry: SandboxAvsCheckAddress1;
-	AddressDoesNotMatch: SandboxAvsCheckAddress1;
-	AvsNotSupported: SandboxAvsCheckAddress1;
-	NineDigitMatch: SandboxAvsCheckAddress1;
-	FiveDigitMatch: SandboxAvsCheckAddress1;
+	zipCodeDoesNotMatch: SandboxAvsCheckAddress1;
+	unsupportedIndustry: SandboxAvsCheckAddress1;
+	addressDoesNotMatch: SandboxAvsCheckAddress1;
+	avsNotSupported: SandboxAvsCheckAddress1;
+	nineDigitMatch: SandboxAvsCheckAddress1;
+	fiveDigitMatch: SandboxAvsCheckAddress1;
 }
 interface SandboxAvsCheckAddress1 {
 	address1: string;
 	avsResponseCode: AvsResponseCode;
 }
 
-export const sandboxAvsCheckAddress1:Readonly<SandboxAvs> = Object.freeze({
-	ZipCodeDoesNotMatch: {
+const sandboxAvsCheckAddress1:Readonly<SandboxAvs> = Object.freeze({
+	zipCodeDoesNotMatch: {
 		address1: "Street_A",
 		avsResponseCode: AvsResponseCode.ZipCodeDoesNotMatch,
 	},
-	UnsupportedIndustry: {
+	unsupportedIndustry: {
 		address1: "Street_E",
 		avsResponseCode: AvsResponseCode.UnsupportedIndustry,
 	},
-	AddressDoesNotMatch: {
+	addressDoesNotMatch: {
 		address1: "Street_N",
 		avsResponseCode: AvsResponseCode.AddressDoesNotMatch,
 	},
-	AvsNotSupported: {
+	avsNotSupported: {
 		address1: "Street_S",
 		avsResponseCode: AvsResponseCode.AvsNotSupported,
 	},
-	NineDigitMatch: {
+	nineDigitMatch: {
 		address1: "Street_X",
 		avsResponseCode: AvsResponseCode.NineDigitMatch,
 	},
-	FiveDigitMatch: {
+	fiveDigitMatch: {
 		address1: "Street_Y",
 		avsResponseCode: AvsResponseCode.FiveDigitMatch,
 	},
 });
 
 export interface SandboxCvv {
-	IssuerNotCertified: SandboxCvvValue;
-	Mismatch: SandboxCvvValue;
-	Match: SandboxCvvValue;
-	NoResults: SandboxCvvValue;
-	NotProcessed: SandboxCvvValue;
-	ShouldBePresent: SandboxCvvValue;
+	issuerNotCertified: SandboxCvvValue;
+	mismatch: SandboxCvvValue;
+	match: SandboxCvvValue;
+	noResults: SandboxCvvValue;
+	notProcessed: SandboxCvvValue;
+	shouldBePresent: SandboxCvvValue;
 }
 
 interface SandboxCvvValue {
@@ -151,33 +158,33 @@ interface SandboxCvvValue {
 	responseCode: ResponseCode;
 }
 
-export const sandboxCvvCode:Readonly<SandboxCvv> = Object.freeze({
-	IssuerNotCertified: {
+const sandboxCvvCode:Readonly<SandboxCvv> = Object.freeze({
+	issuerNotCertified: {
 		cvv: "201",
 		cvvResponseCode: CvvResponseCode.IssuerNotCertified,
 		responseCode: ResponseCode.HardDeclineCvvFailure,
 	},
-	Mismatch: {
+	mismatch: {
 		cvv: "202",
 		cvvResponseCode: CvvResponseCode.Mismatch,
 		responseCode: ResponseCode.RiskDeclinedAvs,
 	},
-	Match: {
+	match: {
 		cvv: "203",
 		cvvResponseCode: CvvResponseCode.Match,
 		responseCode: ResponseCode.Approved,
 	},
-	NoResults: {
+	noResults: {
 		cvv: "204",
 		cvvResponseCode: CvvResponseCode.NoResults,
 		responseCode: ResponseCode.HardDeclineCvvFailure,
 	},
-	NotProcessed: {
+	notProcessed: {
 		cvv: "205",
 		cvvResponseCode: CvvResponseCode.NotProcessed,
 		responseCode: ResponseCode.HardDeclineCvvFailure,
 	},
-	ShouldBePresent: {
+	shouldBePresent: {
 		cvv: "206",
 		cvvResponseCode: CvvResponseCode.ShouldBePresent,
 		responseCode: ResponseCode.RiskGatewayCvvIncorrect,
@@ -185,9 +192,9 @@ export const sandboxCvvCode:Readonly<SandboxCvv> = Object.freeze({
 });
 
 export interface Recovery {
-	Approved: RecoveryAmount;
-	Retry: RecoveryAmount;
-	NoRetry: RecoveryAmount;
+	approved: RecoveryAmount;
+	retry: RecoveryAmount;
+	noRetry: RecoveryAmount;
 }
 
 interface RecoveryAmount {
@@ -196,18 +203,18 @@ interface RecoveryAmount {
 	responseCode: ResponseCode;
 }
 
-export const sandboxRecovery:Readonly<Recovery> = Object.freeze({
-	Approved: {
+const sandboxRecovery:Readonly<Recovery> = Object.freeze({
+	approved: {
 		amount: 6020,
 		disableCustomerRecovery: true,
 		responseCode: ResponseCode.Approved,
 	},
-	Retry: {
+	retry: {
 		amount: 6020,
 		disableCustomerRecovery: false,
 		responseCode: ResponseCode.SoftDeclineReferToCardIssuer,
 	},
-	NoRetry: {
+	noRetry: {
 		amount: 7028,
 		disableCustomerRecovery: true,
 		responseCode: ResponseCode.HardDeclineNoRetryReferToIssuer,
@@ -242,7 +249,7 @@ interface VoidRefundAmount {
 	responseCode: ResponseCode;
 }
 
-export const sandboxVoidRefund:Readonly<VoidRefund> = Object.freeze({
+const sandboxVoidRefund:Readonly<VoidRefund> = Object.freeze({
 	scenario1: {
 		step1Charge: {
 			amount: 9000,
@@ -309,7 +316,7 @@ interface PartialRefundScenario3 {
 	step2FailedRefund: VoidRefundAmount;
 }
 
-export const sandboxPartialRefund:Readonly<PartialRefund> = Object.freeze({
+const sandboxPartialRefund:Readonly<PartialRefund> = Object.freeze({
 	scenario1: {
 		step1Charge: {
 			amount: 9000,

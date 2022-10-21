@@ -7,15 +7,96 @@ export function consoleJson(input:unknown) {
 }
 
 export async function sleep(seconds:number) {
-	await new Promise(r => setTimeout(r, seconds * 1000));
+	await new Promise(r => {
+		console.info(`sleeping for ${seconds}s`);
+		setTimeout(r, seconds * 1000)
+	});
 }
 
-export function generateUniqueMerchantReferenceId() {
+export function generateUniqueMerchantTransactionId() {
 	return (new Date()).getTime().toString();
 }
 
 export const EmptyObjectBuilder = {
-	"captureResponse": () => ({
+	chargeResponse: () => ({
+		response: {
+			avsCode: null,
+			avsMessage: null,
+			cvvCode: null,
+			cvvMessage: null,
+			errorCode: null,
+			errorDetail: "",
+		},
+		paymentMethod: {
+			paymentMethodId: expect.any(String),
+			creditCardNumber: null,
+			expiryMonth: null,
+			expiryYear: null,
+			cvv: null,
+			firstName: null,
+			lastName: null,
+			fullName: null,
+			customerId: null,
+			address1: null,
+			address2: null,
+			postalCode: null,
+			city: null,
+			state: null,
+			country: null,
+			email: null,
+			phoneNumber: null,
+			paymentMethodType: null,
+			fingerprint: null,
+			lastFourDigits: null,
+			firstSixDigits: null,
+			cardType: null,
+			dateCreated: expect.any(Date),
+			storageState: null,
+			gatewayPaymentMethodId: null,
+		},
+		transactionId: expect.any(String),
+		transactionDate: expect.any(Date),
+		transactionStatus: null,
+		message: null,
+		responseCode: null,
+		transactionType: TransactionType.Charge,
+		merchantTransactionId: null,
+		customerId: null,
+		currencyCode: null,
+		amount: expect.any(Number),
+		gatewayToken: expect.any(String),
+		gatewayType: expect.any(String),
+		gatewayTransactionId: expect.any(String),
+		merchantAccountReferenceId: expect.any(String),
+		assignedGatewayToken: expect.any(String),
+		orderId: null,
+		retryDate: null,
+		retryCount: null,
+		dateFirstAttempt: expect.any(Date),
+		description: null,
+		customerIp: null,
+		shippingAddress: {
+			address1: null,
+			address2: null,
+			postalCode: null,
+			city: null,
+			state: null,
+			country: null,
+		},
+		referenceData: expect.any(String),
+		disableCustomerRecovery: false,
+		customVariable1: null,
+		customVariable2: null,
+		customVariable3: null,
+		customVariable4: null,
+		customVariable5: null,
+		//paymentModel: undefined,	// This property is only returned if it was sent
+
+		productSku: null,
+		subscriptionId: null,
+	}),
+
+	captureResponse: () => ({
 		response: {
 			avsCode: null,
 			avsMessage: null,
@@ -90,7 +171,7 @@ export const EmptyObjectBuilder = {
 		customVariable5: null,
 	}),
 
-	"voidResponse": () => ({
+	voidResponse: () => ({
 		response: {
 			avsCode: null,
 			avsMessage: null,
@@ -135,9 +216,9 @@ export const EmptyObjectBuilder = {
 		customerId: expect.any(String),
 		currencyCode: expect.any(String),
 		amount: expect.any(Number),
-		gatewayToken: null,
+		gatewayToken: expect.any(String),
 		gatewayType: expect.any(String),
-		gatewayTransactionId: expect.any(String),
+		gatewayTransactionId: null,
 		merchantAccountReferenceId: null,
 		assignedGatewayToken: expect.any(String),
 		orderId: expect.any(String),
@@ -165,4 +246,79 @@ export const EmptyObjectBuilder = {
 		productSku: null,
 		subscriptionId: null,
 	}),
-};
+
+	refundResponse: () => ({
+		response: {
+			avsCode: null,
+			avsMessage: null,
+			cvvCode: null,
+			cvvMessage: null,
+			errorCode: null,
+			errorDetail: null,
+		},
+		paymentMethod: {
+			paymentMethodId: expect.any(String),
+			creditCardNumber: null,
+			expiryMonth: null,
+			expiryYear: null,
+			cvv: null,
+			firstName: null,
+			lastName: null,
+			fullName: null,
+			customerId: expect.any(String),
+			address1: null,
+			address2: null,
+			postalCode: null,
+			city: null,
+			state: null,
+			country: null,
+			email: null,
+			phoneNumber: null,
+			paymentMethodType: expect.any(String),
+			fingerprint: null,
+			lastFourDigits: expect.any(String),
+			firstSixDigits: expect.any(String),
+			cardType: null,
+			dateCreated: expect.any(Date),
+			storageState: expect.any(String),
+		},
+		transactionId: expect.any(String),
+		transactionDate: expect.any(Date),
+		transactionStatus: expect.any(String),
+		message: expect.any(String),
+		responseCode: expect.any(String),
+		transactionType: TransactionType.Refund,
+		merchantTransactionId: expect.any(String),
+		customerId: expect.any(String),
+		currencyCode: expect.any(String),
+		amount: expect.any(Number),
+		gatewayToken: expect.any(String),
+		gatewayType: expect.any(String),
+		gatewayTransactionId: null,
+		merchantAccountReferenceId: null,
+		assignedGatewayToken: expect.any(String),
+		orderId: expect.any(String),
+		retryDate: null,
+		retryCount: expect.any(Number),
+		dateFirstAttempt: expect.any(Date),
+		description: null,
+		customerIp: null,
+		shippingAddress: {
+			address1: null,
+			address2: null,
+			postalCode: null,
+			city: null,
+			state: null,
+			country: null,
+		},
+		referenceData: expect.any(String),
+		disableCustomerRecovery: false,
+		customVariable1: null,
+		customVariable2: null,
+		customVariable3: null,
+		customVariable4: null,
+		customVariable5: null,
+
+		productSku: null,
+		subscriptionId: null,
+	}),};

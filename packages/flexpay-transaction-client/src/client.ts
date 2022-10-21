@@ -155,6 +155,7 @@ export class TransactionClient {
 
 	private reIsoDateFormat = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2}(?:\.\d*))(?:Z|(\+|-)([\d|:]*))?$/;
 	private jsonDateParser = (key:string, value:unknown):unknown => {
+		// based on logic from https://weblog.west-wind.com/posts/2014/jan/06/javascript-json-date-parsing-and-real-dates
 		if (typeof value === 'string') {
 			if (this.reIsoDateFormat.test(value)) {
 				return new Date(value);

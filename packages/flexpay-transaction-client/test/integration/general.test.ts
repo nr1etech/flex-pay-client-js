@@ -1,5 +1,5 @@
-import { FlexPayTransactionClient, sandbox, PaymentModel, ChargeCreditCardRequest, ResponseError, SortOrder, ResponseCode, CreateCreditCardPaymentMethodRequest, CreateTokenizedPaymentMethodRequest, AuthorizeCreditCardRequest, TransactionStatus, TransactionType, PaymentMethodType, StorageState, AuthorizeTokenizedPaymentMethodRequest, VoidRequest } from "../../src";
-import { consoleJson, EmptyObjectBuilder, generateUniqueMerchantReferenceId, sleep } from "../test-helper";
+import { FlexPayTransactionClient, sandbox, PaymentModel, ChargeCreditCardRequest, ResponseError, SortOrder, ResponseCode, CreateCreditCardPaymentMethodRequest, CreateTokenizedPaymentMethodRequest, AuthorizeCreditCardRequest, TransactionStatus, PaymentMethodType, StorageState, AuthorizeTokenizedPaymentMethodRequest, VoidRequest, AvsResponseCode, CvvResponseCode, ChargeGatewayPaymentMethodRequest, RefundRequest, AuthorizationError, ChargeTokenizedPaymentMethodRequest, ChargeCreditCardResponse, ChargeTokenizedPaymentMethodResponse, AddressResponse, GatewayPaymentMethodResponse, VoidResponse, RefundResponse } from "../../src";
+import { consoleJson, EmptyObjectBuilder, generateUniqueMerchantTransactionId, sleep } from "../test-helper";
 jest.setTimeout(300000);	// 5 minutes
 
 let GATEWAY_TOKEN:string;
@@ -77,7 +77,45 @@ function getBasicTokenizedPaymentMethodRequest<T>(requestOverride?:Record<string
 }
 
 
-describe("Health Check", () => {
+describe("Client", () => {
+	it("should show unauthorized on an invalid auth token", async () => {
+		const tempClient = new FlexPayTransactionClient({
+			authorizationToken: "INVALIDAUTHTOKEN",
+		});
+
+		try {
+			await tempClient.paymentMethods.getPaymentMethod("DONTNEEDANYTHING");
+			expect("Should have thown an excpetion").toBeFalsy();
+		} catch (ex) {
+			expect(ex).toBeInstanceOf(AuthorizationError);
+		}
+	});
+
+	it("should show unauthorized on a blank auth token", async () => {
+		const tempClient = new FlexPayTransactionClient({
+			authorizationToken: "",
+		});
+
+		try {
+			await tempClient.paymentMethods.getPaymentMethod("DONTNEEDANYTHING");
+			expect("Should have thown an excpetion").toBeFalsy();
+		} catch (ex) {
+			expect(ex).toBeInstanceOf(AuthorizationError);
+		}
+	});
+
+	it("should fail to instantiate if an invalid URL is given", async () => {
+		try {
+			new FlexPayTransactionClient({
+				authorizationToken: "ABCD",
+				baseUrl: "ftp://thisisnt.the.url",
+			});
+			expect("Should have thrown an exception").toBeFalsy();
+		} catch (ex) {
+
+		}
+	});
+
 	it("should report healthy", async () => {
 		const isHealthy = await client.healthCheck.healthCheck();
 		expect(isHealthy).toEqual(true);
@@ -210,10 +248,13 @@ describe("Payment Methods", () => {
 		["Sandbox CVV", sandbox.creditCards.visa.cvv],
 		["Null CVV", null]
 	])("should recache the CVV value (%s: %s)", async (testName:string, cvv:string|null) => {
-		const response = await client.paymentMethods.createCreditCardPaymentMethod(getBasicCreditCardPaymentMethodRequest());
-		expect(response.responseCode, "Credit Card Payment Method approved").toEqual(ResponseCode.Approved);
+		// const response = await client.paymentMethods.createCreditCardPaymentMethod(getBasicCreditCardPaymentMethodRequest());
+		// expect(response.responseCode, "Credit Card Payment Method approved").toEqual(ResponseCode.Approved);
 
-		const recacheResponse = await client.paymentMethods.recacheCvv(response.paymentMethod.paymentMethodId, cvv);
+		//const paymentMethodId = response.paymentMethod.paymentMethodId;
+		const paymentMethodId = "UJ3XO2KT4FZU3PPYAGB7FF6CVU";
+
+		const recacheResponse = await client.paymentMethods.recacheCvv(paymentMethodId, cvv);
 		expect(recacheResponse.responseCode).toEqual(ResponseCode.Approved);
 	});
 });
@@ -262,7 +303,7 @@ function getBasicChargeRequest(override?:Record<string, unknown>):ChargeCreditCa
 		description: "Test charge",
 		gatewayToken: GATEWAY_TOKEN,
 		disableCustomerRecovery: false,
-		merchantTransactionId: generateUniqueMerchantReferenceId(),
+		merchantTransactionId: generateUniqueMerchantTransactionId(),
 		orderId: "01234",
 		paymentMethod: {
 			address1: "123 A St",
@@ -323,18 +364,47 @@ function getBasicChargeRequest(override?:Record<string, unknown>):ChargeCreditCa
 describe("Charge", () => {
 	it("should approve a credit card", async () => {
 		const chargeRequest = getBasicChargeRequest();
-		const transaction = await client.charge.chargeCreditCard(chargeRequest);
-		expect(transaction.responseCode, "Credit Card Charge should be created").toEqual(ResponseCode.Approved);
+		const chargeResponse = await client.charge.chargeCreditCard(chargeRequest);
 
-		await sleep(6);	// Wait to see if the transaction will be available. In manual tests the wait time has been highly variable.
+		let expectedResponse:any = EmptyObjectBuilder.chargeResponse();
+		expectedResponse = {
+			...expectedResponse,
+			currencyCode: chargeRequest.currencyCode,
+			customerId: chargeRequest.customerId,
+			customerIp: chargeRequest.customerIp,
+			description: chargeRequest.description,
+			merchantTransactionId: chargeRequest.merchantTransactionId,
+			orderId: chargeRequest.orderId,
+			retryCount: chargeRequest.retryCount,
+			shippingAddress: chargeRequest.shippingAddress,
 
-		// Load the transaction so we can verify it exists
-		try {
-			const reloadedTransaction = await client.transactions.getTransaction(transaction.transactionId);
-			expect(reloadedTransaction.transactionId, "Should have loaded the transaction").toEqual(transaction.transactionId);
-		} catch (ex) {
-			expect(ex, "Should not have thrown when getting the Charge transaction").toBeFalsy();
-		}
+			message: "Approved.",
+			responseCode: ResponseCode.Approved,
+			transactionStatus: TransactionStatus.Approved,
+			response: {
+				...expectedResponse.response,
+				cvvCode: CvvResponseCode.Match,
+				cvvMessage: "Approved",
+				avsCode: AvsResponseCode.AvsNotSupported,
+				avsMessage: "AVS not supported.",
+			},
+			paymentMethod: {
+				...expectedResponse.paymentMethod,
+				...chargeRequest.paymentMethod,
+				cardType: sandbox.creditCards.visa.cardType,
+				creditCardNumber: expect.stringContaining(chargeRequest.paymentMethod.creditCardNumber.slice(0, 6)),
+				cvv: "***",
+				customerId: chargeRequest.customerId,
+				fullName: expect.stringMatching(`${chargeRequest.paymentMethod.firstName} ${chargeRequest.paymentMethod.lastName}`),
+				firstSixDigits: expect.stringMatching(chargeRequest.paymentMethod.creditCardNumber.slice(0, 6)),
+				lastFourDigits: expect.stringMatching(chargeRequest.paymentMethod.creditCardNumber.slice(-4)),
+				paymentMethodType: PaymentMethodType.CreditCard,
+				storageState: StorageState.Cached,
+			}
+		};
+		delete expectedResponse.paymentMethod.merchantAccountReferenceId;
+
+		expect(chargeResponse, "Credit Card Charge response should match expected values").toEqual(expectedResponse);
 	});
 
 	it("should fail if a malformed payload is sent", async () => {
@@ -345,6 +415,56 @@ describe("Charge", () => {
 		} catch (ex) {
 			expect(ex, "Should have thrown a ResponseError").toBeInstanceOf(ResponseError);
 		}
+	});
+
+	it("should decline on invalid data", async () => {
+		const chargeRequest = getBasicChargeRequest({
+			paymentMethod: {
+				...getBasicChargeRequest().paymentMethod,
+				cvv: sandbox.cvv.mismatch.cvv
+			}
+		});
+		const chargeResponse = await client.charge.chargeCreditCard(chargeRequest);
+
+		let expectedResponse:any = EmptyObjectBuilder.chargeResponse();
+		expectedResponse = {
+			...expectedResponse,
+			currencyCode: chargeRequest.currencyCode,
+			customerId: chargeRequest.customerId,
+			customerIp: chargeRequest.customerIp,
+			description: chargeRequest.description,
+			merchantTransactionId: chargeRequest.merchantTransactionId,
+			orderId: chargeRequest.orderId,
+			retryCount: chargeRequest.retryCount,
+			shippingAddress: chargeRequest.shippingAddress,
+
+			message: expect.stringContaining("not matched"),
+			responseCode: sandbox.cvv.mismatch.responseCode,
+			transactionStatus: TransactionStatus.Declined,
+			response: {
+				...expectedResponse.response,
+				cvvCode: sandbox.cvv.mismatch.cvvResponseCode,
+				cvvMessage: expect.stringContaining("does not match"),
+				avsCode: expect.any(String),
+				avsMessage: expect.any(String),
+			},
+			paymentMethod: {
+				...expectedResponse.paymentMethod,
+				...chargeRequest.paymentMethod,
+				cardType: sandbox.creditCards.visa.cardType,
+				creditCardNumber: expect.stringContaining(chargeRequest.paymentMethod.creditCardNumber.slice(0, 6)),
+				cvv: "***",
+				customerId: chargeRequest.customerId,
+				fullName: expect.stringMatching(`${chargeRequest.paymentMethod.firstName} ${chargeRequest.paymentMethod.lastName}`),
+				firstSixDigits: expect.stringMatching(chargeRequest.paymentMethod.creditCardNumber.slice(0, 6)),
+				lastFourDigits: expect.stringMatching(chargeRequest.paymentMethod.creditCardNumber.slice(-4)),
+				paymentMethodType: PaymentMethodType.CreditCard,
+				storageState: StorageState.Cached,
+			}
+		};
+		delete expectedResponse.paymentMethod.merchantAccountReferenceId;
+
+		expect(chargeResponse, "Credit Card Charge response should match expected values").toEqual(expectedResponse);
 	});
 
 	it.skip("should retain the payment info in the vault", async () => {
@@ -360,6 +480,7 @@ describe("Charge", () => {
 		});
 
 		if (transaction.paymentMethod.paymentMethodId) {
+			await sleep(15);
 			// Load the payment method so we can verify it exists
 			try {
 				const retainedPaymentMethod = await client.paymentMethods.getPaymentMethod(transaction.paymentMethod.paymentMethodId);
@@ -372,8 +493,10 @@ describe("Charge", () => {
 		}
 	});
 
-	it.skip("should charge a stored payment method", async () => {
-		const paymentMethod = await client.paymentMethods.createCreditCardPaymentMethod(getBasicCreditCardPaymentMethodRequest());
+	it("should charge a stored payment method", async () => {
+		const paymentMethod = await client.paymentMethods.createCreditCardPaymentMethod(getBasicCreditCardPaymentMethodRequest<CreateCreditCardPaymentMethodRequest>({
+			customerId: "CUSTOMERWITHSTOREDPAYMENTMETHOD"
+		}));
 		expect(paymentMethod).toMatchObject({
 			responseCode: ResponseCode.Approved,
 			paymentMethod: {
@@ -381,14 +504,16 @@ describe("Charge", () => {
 			},
 		});
 
-		const transaction = await client.charge.chargeTokenizedPaymentMethod({
-			merchantTransactionId: generateUniqueMerchantReferenceId(),
+		const paymentMethodId = paymentMethod.paymentMethod.paymentMethodId;
+
+		const chargeRequest:ChargeTokenizedPaymentMethodRequest = {
+			merchantTransactionId: generateUniqueMerchantTransactionId(),
 			orderId: "O1111",
 			description: null,
-			customerId: "test customer 45342",
+			customerId: paymentMethod.customerId,
 			currencyCode: "USD",
 			amount: 1000,
-			paymentMethodId: paymentMethod.paymentMethod.paymentMethodId,
+			paymentMethodId: paymentMethodId,
 			customerIp: null,
 			shippingAddress: null,
 			gatewayToken: GATEWAY_TOKEN,
@@ -402,16 +527,69 @@ describe("Charge", () => {
 			customVariable3: null,
 			customVariable4: null,
 			customVariable5: null,
-			References: null
-		});
-		expect(transaction, "Tokenized Payment Method Charge should be created").toMatchObject({
+			References: null,
+		};
+
+		const chargeResponse = await client.charge.chargeTokenizedPaymentMethod(chargeRequest);
+
+		let expectedResponse = EmptyObjectBuilder.chargeResponse() as unknown as ChargeTokenizedPaymentMethodResponse;
+		expectedResponse = {
+			...expectedResponse,
+			currencyCode: chargeRequest.currencyCode,
+			customerId: chargeRequest.customerId!,
+			customerIp: chargeRequest.customerIp!,
+			description: chargeRequest.description!,
+			merchantTransactionId: chargeRequest.merchantTransactionId,
+			orderId: chargeRequest.orderId,
+			retryCount: chargeRequest.retryCount,
+			shippingAddress: (chargeRequest.shippingAddress as AddressResponse) ?? {
+				address1: null,
+				address2: null,
+				city: null,
+				state: null,
+				postalCode: null,
+				country: null,
+			},
+			message: "Approved.",
 			responseCode: ResponseCode.Approved,
-		});
+			transactionStatus: TransactionStatus.Approved,
+			response: {
+				...expectedResponse.response,
+				cvvCode: CvvResponseCode.Match,
+				cvvMessage: "Approved",
+				avsCode: AvsResponseCode.AvsNotSupported,
+				avsMessage: "AVS not supported.",
+			},
+			paymentMethod: {
+				...expectedResponse.paymentMethod,
+				address1: paymentMethod.paymentMethod.address1,
+				address2: paymentMethod.paymentMethod.address2,
+				city: paymentMethod.paymentMethod.city,
+				country: paymentMethod.paymentMethod.country,
+				state: paymentMethod.paymentMethod.state,
+				postalCode: paymentMethod.paymentMethod.postalCode,
+				cardType: sandbox.creditCards.visa.cardType,
+				creditCardNumber: expect.any(String),
+				expiryMonth: paymentMethod.paymentMethod.expiryMonth,
+				expiryYear: paymentMethod.paymentMethod.expiryYear,
+				cvv: "",
+				customerId: chargeRequest.customerId!,
+				firstName: paymentMethod.paymentMethod.firstName,
+				lastName: paymentMethod.paymentMethod.lastName,
+				fullName: expect.any(String),
+				firstSixDigits: expect.any(String),
+				lastFourDigits: expect.any(String),
+				paymentMethodType: PaymentMethodType.GatewayPaymentMethodId,
+				storageState: StorageState.Cached,
+			},
+		};
+
+		expect(chargeResponse, "Tokenized Payment Method response should match expected values").toEqual(expectedResponse);
 	});
 
 	it.skip("should fail to charge a non-existent tokenized payment method", async () => {
 		const transaction = await client.charge.chargeTokenizedPaymentMethod({
-			merchantTransactionId: generateUniqueMerchantReferenceId(),
+			merchantTransactionId: generateUniqueMerchantTransactionId(),
 			orderId: "O1111",
 			description: null,
 			customerId: "test customer 45342",
@@ -443,123 +621,150 @@ describe("Charge", () => {
 		const paymentMethod = await client.paymentMethods.createdTokenizedPaymentMethod(gatewayPaymentMethodRequest);
 		expect(paymentMethod).toMatchObject({
 			responseCode: ResponseCode.Approved,
-			paymentMethod: {
-				paymentMethodId: expect.stringMatching(/[A-Z0-9]+/),
-			},
 		});
 
-		const transaction = await client.charge.chargeGatewayPaymentMethod({
-			merchantTransactionId: generateUniqueMerchantReferenceId(),
+		const chargeRequest:ChargeGatewayPaymentMethodRequest = {
+			merchantTransactionId: generateUniqueMerchantTransactionId(),
 			orderId: "O1111",
-			description: null,
 			customerId: "test customer 45342",
 			currencyCode: "USD",
 			amount: 1000,
 			paymentMethod: {
 				gatewayPaymentMethodId: paymentMethod.paymentMethod.gatewayPaymentMethodId,
 				merchantAccountReferenceId: paymentMethod.paymentMethod.merchantAccountReferenceId,
-				firstName: "Joe",
-				lastName: "Smith",
-				postalCode: "84062",
-				city: "Pleasant Grove",
-				state: "UT",
+				firstName: gatewayPaymentMethodRequest.gatewayPaymentMethod.firstName,
+				lastName: gatewayPaymentMethodRequest.gatewayPaymentMethod.lastName,
+				postalCode: gatewayPaymentMethodRequest.gatewayPaymentMethod.postalCode,
+				city: gatewayPaymentMethodRequest.gatewayPaymentMethod.city,
+				state: gatewayPaymentMethodRequest.gatewayPaymentMethod.state,
 			},
-			customerIp: null,
-			shippingAddress: null,
 			gatewayToken: GATEWAY_TOKEN,
-			paymentPlan: null,
 			retryCount: 1,
-			dateFirstAttempt: null,
-			referenceData: null,
-			disableCustomerRecovery: false,
-			customVariable1: null,
-			customVariable2: null,
-			customVariable3: null,
-			customVariable4: null,
-			customVariable5: null,
-			References: null
-		});
-		expect(transaction, "Tokenized Payment Method Charge should be approved").toMatchObject({
+			paymentModel: PaymentModel.OneTime,
+		};
+
+		const chargeResponse = await client.charge.chargeGatewayPaymentMethod(chargeRequest);
+
+		let expectedResponse:any = EmptyObjectBuilder.chargeResponse();
+		expectedResponse = {
+			...expectedResponse,
+			currencyCode: chargeRequest.currencyCode,
+			customerId: chargeRequest.customerId,
+			merchantTransactionId: chargeRequest.merchantTransactionId,
+			orderId: chargeRequest.orderId,
+			retryCount: chargeRequest.retryCount,
+			message: "Approved.",
 			responseCode: ResponseCode.Approved,
-		});
+			transactionStatus: TransactionStatus.Approved,
+			response: {
+				...expectedResponse.response,
+				cvvCode: CvvResponseCode.Match,
+				cvvMessage: "Approved",
+				avsCode: AvsResponseCode.AvsNotSupported,
+				avsMessage: "AVS not supported.",
+			},
+			paymentMethod: {
+				...expectedResponse.paymentMethod,
+				gatewayPaymentMethodId: paymentMethod.paymentMethod.gatewayPaymentMethodId,
+				merchantAccountReferenceId: paymentMethod.paymentMethod.merchantAccountReferenceId,
+				creditCardNumber: expect.any(String),
+				cvv: "",
+				customerId: chargeRequest.customerId,
+
+				firstName: paymentMethod.paymentMethod.firstName,
+				lastName: paymentMethod.paymentMethod.lastName,
+
+				fullName: expect.any(String),
+				firstSixDigits: expect.any(String),
+				lastFourDigits: expect.any(String),
+				paymentMethodType: PaymentMethodType.GatewayPaymentMethodId,
+				storageState: StorageState.Cached,
+
+				city: paymentMethod.paymentMethod.city,
+				state: paymentMethod.paymentMethod.state,
+				postalCode: paymentMethod.paymentMethod.postalCode,
+			}
+		};
+
+		expect(chargeResponse, "Gateway Payment Method response should match expected values").toEqual(expectedResponse);
 	});
 
 });
 
-describe("Authorize", () => {
-	function getBasicAuthRequest(override?:Record<string, unknown>):AuthorizeCreditCardRequest {
-		const request:AuthorizeCreditCardRequest = {
-			amount: 1000,	// $10.00
-			currencyCode: "USD",
-			customerId: "test",
-			customerIp: "196.168.1.123",
-			dateFirstAttempt: new Date(),
-			description: "Test charge",
-			gatewayToken: GATEWAY_TOKEN,
-			disableCustomerRecovery: false,
-			merchantTransactionId: generateUniqueMerchantReferenceId(),
-			orderId: "01234",
-			paymentMethod: {
-				address1: "123 A St",
-				address2: null,
-				city: "Townsville",
-				state: "UT",
-				postalCode: "84062",
-				country: "US",
+function getBasicAuthRequest(override?:Record<string, unknown>):AuthorizeCreditCardRequest {
+	const request:AuthorizeCreditCardRequest = {
+		amount: 1000,	// $10.00
+		currencyCode: "USD",
+		customerId: "test",
+		customerIp: "196.168.1.123",
+		dateFirstAttempt: new Date(),
+		description: "Test charge",
+		gatewayToken: GATEWAY_TOKEN,
+		disableCustomerRecovery: false,
+		merchantTransactionId: generateUniqueMerchantTransactionId(),
+		orderId: "01234",
+		paymentMethod: {
+			address1: "123 A St",
+			address2: null,
+			city: "Townsville",
+			state: "UT",
+			postalCode: "84062",
+			country: "US",
 
-				creditCardNumber: sandbox.creditCards.visa.creditCardNumber,
-				cvv: sandbox.creditCards.visa.cvv,
-				expiryMonth: sandbox.creditCards.visa.expiryMonth,
-				expiryYear: sandbox.creditCards.visa.expiryYear,
-				phoneNumber: "8015551234",
-				email: "johndoe@example.com",
-				firstName: "John",
-				lastName: "Doe",
-				fullName: null,
+			creditCardNumber: sandbox.creditCards.visa.creditCardNumber,
+			cvv: sandbox.creditCards.visa.cvv,
+			expiryMonth: sandbox.creditCards.visa.expiryMonth,
+			expiryYear: sandbox.creditCards.visa.expiryYear,
+			phoneNumber: "8015551234",
+			email: "johndoe@example.com",
+			firstName: "John",
+			lastName: "Doe",
+			fullName: null,
+			merchantAccountReferenceId: null,
+		},
+		customVariable1: null,
+		customVariable2: null,
+		customVariable3: null,
+		customVariable4: null,
+		customVariable5: null,
+		paymentModel: PaymentModel.Subscription,
+		paymentPlan: {
+			billingCycle: null,
+			billingPlan: null,
+			category: null,
+			sku: null
+		},
+		shippingAddress: {
+			address1: "123 A St",
+			address2: null,
+			city: "Townsville",
+			state: "UT",
+			postalCode: "84062",
+			country: "US",
+		},
+		referenceData: null,
+		References: {
+			PreviousTransaction: {
+				gatewayCode: null,
+				gatewayMesage: null,
 				merchantAccountReferenceId: null,
-			},
-			customVariable1: null,
-			customVariable2: null,
-			customVariable3: null,
-			customVariable4: null,
-			customVariable5: null,
-			paymentModel: PaymentModel.Subscription,
-			paymentPlan: {
-				billingCycle: null,
-				billingPlan: null,
-				category: null,
-				sku: null
-			},
-			shippingAddress: {
-				address1: "123 A St",
-				address2: null,
-				city: "Townsville",
-				state: "UT",
-				postalCode: "84062",
-				country: "US",
-			},
-			referenceData: null,
-			References: {
-				PreviousTransaction: {
-					gatewayCode: null,
-					gatewayMesage: null,
-					merchantAccountReferenceId: null,
-					transactionDate: null
-				}
-			},
-			retainOnSuccess: false,
-			retryCount: 1,
-			...override,
-		};
+				transactionDate: null
+			}
+		},
+		retainOnSuccess: false,
+		retryCount: 1,
+		...override,
+	};
 
-		return request;
-	}
+	return request;
+}
 
+describe("Authorize", () => {
 	it("should approve a credit card", async () => {
 		const transaction = await client.authorize.authorizeCreditCard(getBasicAuthRequest());
 		expect(transaction.responseCode, "Credit Card Auth should be created").toEqual(ResponseCode.Approved);
 
-		await sleep(6);	// Wait to see if the transaction will be available. In manual tests the wait time has been highly variable (2 ~ 10 seconds).
+		await sleep(15);	// Wait to see if the transaction will be available. In manual tests the wait time has been highly variable (2 ~ 10 seconds).
 
 		// Load the transaction so we can verify it exists
 		try {
@@ -615,7 +820,7 @@ describe("Authorize", () => {
 		});
 
 		const transaction = await client.authorize.authorizeTokenizedPaymentMethod({
-			merchantTransactionId: generateUniqueMerchantReferenceId(),
+			merchantTransactionId: generateUniqueMerchantTransactionId(),
 			orderId: "O1111",
 			description: null,
 			customerId: "test customer 45342",
@@ -644,7 +849,7 @@ describe("Authorize", () => {
 
 	it.skip("should fail to auth a non-existent tokenized payment method", async () => {
 		const transaction = await client.authorize.authorizeTokenizedPaymentMethod({
-			merchantTransactionId: generateUniqueMerchantReferenceId(),
+			merchantTransactionId: generateUniqueMerchantTransactionId(),
 			orderId: "O1111",
 			description: null,
 			customerId: "test customer 45342",
@@ -682,7 +887,7 @@ describe("Authorize", () => {
 		});
 
 		const transaction = await client.authorize.authorizeGatewayPaymentMethod({
-			merchantTransactionId: generateUniqueMerchantReferenceId(),
+			merchantTransactionId: generateUniqueMerchantTransactionId(),
 			orderId: "O1111",
 			description: null,
 			customerId: "test customer 45342",
@@ -723,7 +928,7 @@ describe("Capture", () => {
 		const requestOptions = {
 			amount: 1000,
 			disableCustomerRecovery: false,
-			merchantTransactionId: generateUniqueMerchantReferenceId(),
+			merchantTransactionId: generateUniqueMerchantTransactionId(),
 		};
 		const result = await client.capture.capture("MADEUPTRANSACTIONID", requestOptions);
 
@@ -758,7 +963,7 @@ describe("Capture", () => {
 		const authRequest:AuthorizeCreditCardRequest = {
 			amount: 1000,
 			currencyCode: "USD",
-			merchantTransactionId: generateUniqueMerchantReferenceId(),
+			merchantTransactionId: generateUniqueMerchantTransactionId(),
 			orderId: "O112233",
 			paymentMethod: {
 				creditCardNumber: sandbox.creditCards.masterCard.creditCardNumber,
@@ -815,11 +1020,11 @@ describe("Capture", () => {
 		expect(result, "Capture response should match expected values").toEqual(expectedResponse);
 	});
 
-	it("should capture a credit card auth", async () => {
+	it.skip("should capture a credit card auth", async () => {
 		const authRequest:AuthorizeCreditCardRequest = {
 			amount: 1000,
 			currencyCode: "USD",
-			merchantTransactionId: generateUniqueMerchantReferenceId(),
+			merchantTransactionId: generateUniqueMerchantTransactionId(),
 			orderId: "O112233",
 			paymentMethod: {
 				creditCardNumber: sandbox.creditCards.masterCard.creditCardNumber,
@@ -884,7 +1089,7 @@ describe("Capture", () => {
 		const authRequest:AuthorizeTokenizedPaymentMethodRequest = {
 			amount: 1000,
 			currencyCode: "USD",
-			merchantTransactionId: generateUniqueMerchantReferenceId(),
+			merchantTransactionId: generateUniqueMerchantTransactionId(),
 			orderId: "O112233",
 			paymentMethodId: tokenizeResult.paymentMethod.paymentMethodId,
 			retryCount: 3,
@@ -924,7 +1129,7 @@ describe("Capture", () => {
 			disableCustomerRecovery: authRequest.disableCustomerRecovery ?? false,
 		};
 
-		expect(result, "Capture result should match expected values").toEqual(expectedResponse);
+		expect(result, "Tokenized Auth then Capture response should match expected values").toEqual(expectedResponse);
 	});
 
 	it.skip("should capture a gateway payment method auth", async () => {
@@ -938,7 +1143,7 @@ describe("Capture", () => {
 		const authRequest:AuthorizeTokenizedPaymentMethodRequest = {
 			amount: 1000,
 			currencyCode: "USD",
-			merchantTransactionId: generateUniqueMerchantReferenceId(),
+			merchantTransactionId: generateUniqueMerchantTransactionId(),
 			orderId: "O112233",
 			paymentMethodId: tokenizeResult.paymentMethod.paymentMethodId,
 			retryCount: 3,
@@ -966,85 +1171,239 @@ describe("Capture", () => {
 			disableCustomerRecovery: authRequest.disableCustomerRecovery ?? false,
 		};
 
-		expect(result, "Capture result should match expected values").toEqual(expectedResponse);
+		expect(result, "Gateway Auth then Capture response should match expected values").toEqual(expectedResponse);
 	});
-
 })
 
 describe("Void", () => {
-	it.skip("should void a credit card charge", async () => {
+	it("should void a credit card charge", async () => {
 		const chargeRequest = getBasicChargeRequest();
 		const chargeResponse = await client.charge.chargeCreditCard(chargeRequest);
 		expect(chargeResponse.responseCode, "Credit Card Charge should be created").toEqual(ResponseCode.Approved);
 
-		//await sleep(6);	// Wait to see if the transaction will be available. In manual tests the wait time has been highly variable.
+		await sleep(10);
 
 		const voidRequest:VoidRequest = {
-			merchantTransactionId: chargeRequest.merchantTransactionId,
+			merchantTransactionId: generateUniqueMerchantTransactionId(),
 		};
 		const voidResponse = await client.void.void(chargeResponse.transactionId, voidRequest);
+
+		let expectedResponse:VoidResponse = EmptyObjectBuilder.voidResponse() as unknown as VoidResponse;
+		expectedResponse =
+		{
+			...expectedResponse,
+			currencyCode: chargeResponse.currencyCode,
+			description: chargeResponse.description,
+			gatewayTransactionId: expect.any(String),
+			merchantAccountReferenceId: expect.any(String),
+			amount: chargeResponse.amount,
+			transactionStatus: TransactionStatus.Approved,
+			responseCode: ResponseCode.Approved,
+			message: expect.stringContaining("Approved"),
+			merchantTransactionId: voidRequest.merchantTransactionId,
+			disableCustomerRecovery: voidRequest.disableCustomerRecovery ?? false,
+			paymentMethod: {
+				...chargeResponse.paymentMethod,
+				dateCreated: expect.any(Date),
+			},
+			response: chargeResponse.response,
+			shippingAddress: chargeResponse.shippingAddress,
+		} as unknown as VoidResponse;
+
+		expect(voidResponse, "Void response to match expected values").toEqual(expectedResponse);
+	});
+
+	it("should void a credit card auth", async () => {
+		const authRequest = getBasicAuthRequest();
+		const authResponse = await client.authorize.authorizeCreditCard(authRequest);
+		expect(authResponse.responseCode, "Credit Card Auth should be approved").toEqual(ResponseCode.Approved);
+
+		await sleep(10);
+
+		const voidRequest:VoidRequest = {
+			merchantTransactionId: generateUniqueMerchantTransactionId(),
+		};
+		const voidResponse = await client.void.void(authResponse.transactionId, voidRequest);
+
+		let expectedResponse:VoidResponse = EmptyObjectBuilder.voidResponse() as unknown as VoidResponse;
+		expectedResponse =
+		{
+			...expectedResponse,
+			currencyCode: authResponse.currencyCode,
+			description: authResponse.description,
+			gatewayTransactionId: expect.any(String),
+			merchantAccountReferenceId: expect.any(String),
+			amount: authResponse.amount,
+			transactionStatus: TransactionStatus.Approved,
+			responseCode: ResponseCode.Approved,
+			message: expect.stringContaining("Approved"),
+			merchantTransactionId: voidRequest.merchantTransactionId,
+			disableCustomerRecovery: voidRequest.disableCustomerRecovery ?? false,
+			paymentMethod: {
+				...authResponse.paymentMethod,
+				dateCreated: expect.any(Date),
+			},
+			response: authResponse.response,
+			shippingAddress: authResponse.shippingAddress,
+		} as unknown as VoidResponse;
+
+		expect(voidResponse, "Void response to match expected values").toEqual(expectedResponse);
+	});
+
+	it("should fail to void a non-existent transaction", async () => {
+		const voidRequest:VoidRequest = {
+			merchantTransactionId: generateUniqueMerchantTransactionId(),
+		};
+		const voidResponse = await client.void.void("MADEUPTXNIDFORVOID", voidRequest);
 
 		const expectedResponse =
 		{
 			...EmptyObjectBuilder.voidResponse(),
-			currencyCode: chargeResponse.currencyCode,
-			amount: chargeResponse.amount,
-			transactionStatus: TransactionStatus.Approved,
-			responseCode: ResponseCode.Approved,
-			message: expect.stringContaining("approved"),
+			transactionStatus: TransactionStatus.Declined,
+			responseCode: ResponseCode.ApiOriginalTransactionNotFound,
+			message: expect.stringContaining("not found"),
 			merchantTransactionId: voidRequest.merchantTransactionId,
 			disableCustomerRecovery: voidRequest.disableCustomerRecovery ?? false,
 		};
 
 		expect(voidResponse, "Void response to match expected values").toEqual(expectedResponse);
-	});
-
-	it.skip("should void a credit card auth", async () => {
-
-	});
-
-	it.skip("should fail to void a non-existent transaction", async () => {
-
 	});
 });
 
 describe("Refund", () => {
-	it.skip("should refund a credit card charge", async () => {
+	it("should refund a credit card charge", async () => {
 		const chargeRequest = getBasicChargeRequest();
 		const chargeResponse = await client.charge.chargeCreditCard(chargeRequest);
 		expect(chargeResponse.responseCode, "Credit Card Charge should be created").toEqual(ResponseCode.Approved);
 
-		//await sleep(6);	// Wait to see if the transaction will be available. In manual tests the wait time has been highly variable.
+		await sleep(10);
 
-		const voidRequest:VoidRequest = {
-			merchantTransactionId: chargeRequest.merchantTransactionId,
+		const refundRequest:RefundRequest = {
+			merchantTransactionId: generateUniqueMerchantTransactionId(),
 		};
-		const voidResponse = await client.void.void(chargeResponse.transactionId, voidRequest);
+		const refundResponse = await client.refund.refund(chargeResponse.transactionId, refundRequest);
 
-		const expectedResponse =
+		let expectedResponse:RefundResponse = EmptyObjectBuilder.refundResponse() as unknown as RefundResponse;
+		expectedResponse =
 		{
-			...EmptyObjectBuilder.voidResponse(),
+			...expectedResponse,
 			currencyCode: chargeResponse.currencyCode,
+			description: chargeResponse.description,
+			gatewayTransactionId: expect.any(String),
+			merchantAccountReferenceId: expect.any(String),
 			amount: chargeResponse.amount,
 			transactionStatus: TransactionStatus.Approved,
 			responseCode: ResponseCode.Approved,
-			message: expect.stringContaining("approved"),
-			merchantTransactionId: voidRequest.merchantTransactionId,
-			disableCustomerRecovery: voidRequest.disableCustomerRecovery ?? false,
+			message: expect.stringContaining("Approved"),
+			merchantTransactionId: refundRequest.merchantTransactionId,
+			disableCustomerRecovery: refundRequest.disableCustomerRecovery ?? false,
+			paymentMethod: {
+				...chargeResponse.paymentMethod,
+				dateCreated: expect.any(Date),
+			},
+			response: chargeResponse.response,
+			shippingAddress: chargeResponse.shippingAddress,
+		} as unknown as RefundResponse;
+
+		expect(refundResponse, "Refund response to match expected values").toEqual(expectedResponse);
+	});
+
+	it("should refund a partial", async () => {
+		const chargeRequest = getBasicChargeRequest();
+		const chargeResponse = await client.charge.chargeCreditCard(chargeRequest);
+		expect(chargeResponse.responseCode, "Credit Card Charge should be created").toEqual(ResponseCode.Approved);
+
+		await sleep(10);
+
+		const refundRequest:RefundRequest = {
+			amount: Math.floor(chargeRequest.amount / 2),
+			merchantTransactionId: generateUniqueMerchantTransactionId(),
+		};
+		const refundResponse = await client.refund.refund(chargeResponse.transactionId, refundRequest);
+
+		let expectedResponse:RefundResponse = EmptyObjectBuilder.refundResponse() as unknown as RefundResponse;
+		expectedResponse =
+		{
+			...expectedResponse,
+			currencyCode: chargeResponse.currencyCode,
+			description: chargeResponse.description,
+			gatewayTransactionId: expect.any(String),
+			merchantAccountReferenceId: expect.any(String),
+			amount: refundRequest.amount,
+			transactionStatus: TransactionStatus.Approved,
+			responseCode: ResponseCode.Approved,
+			message: expect.stringContaining("Approved"),
+			merchantTransactionId: refundRequest.merchantTransactionId,
+			disableCustomerRecovery: refundRequest.disableCustomerRecovery ?? false,
+			paymentMethod: {
+				...chargeResponse.paymentMethod,
+				dateCreated: expect.any(Date),
+			},
+			response: chargeResponse.response,
+			shippingAddress: chargeResponse.shippingAddress,
+		} as unknown as RefundResponse;
+
+		expect(refundResponse, "Refund response to match expected values").toEqual(expectedResponse);
+	});
+
+	it("should fail to refund a non-existent transaction", async () => {
+		const refundRequest:RefundRequest = {
+			merchantTransactionId: generateUniqueMerchantTransactionId(),
+		};
+		const refundResponse = await client.refund.refund("ANONEXISTENTVALUE", refundRequest);
+
+		const expectedResponse =
+		{
+			...EmptyObjectBuilder.refundResponse(),
+			transactionStatus: TransactionStatus.Declined,
+			responseCode: ResponseCode.ApiOriginalTransactionNotFound,
+			message: expect.stringContaining("not found"),
+			merchantTransactionId: refundRequest.merchantTransactionId,
+			disableCustomerRecovery: refundRequest.disableCustomerRecovery ?? false,
 		};
 
-		expect(voidResponse, "Void response to match expected values").toEqual(expectedResponse);
-	});
-
-	it.skip("should refund a partial", async () => {
+		expect(refundResponse, "Refund response to match expected values").toEqual(expectedResponse);
 
 	});
 
-	it.skip("should fail to refund a non-existent transaction", async () => {
+	it("should fail to refund above the original amount", async () => {
+		const chargeRequest = getBasicChargeRequest();
+		const chargeResponse = await client.charge.chargeCreditCard(chargeRequest);
+		expect(chargeResponse.responseCode, "Credit Card Charge should be created").toEqual(ResponseCode.Approved);
 
-	});
+		await sleep(10);
 
-	it.skip("should fail to refund above the original amount", async () => {
+		const refundRequest:RefundRequest = {
+			amount: chargeRequest.amount + 500,
+			merchantTransactionId: generateUniqueMerchantTransactionId(),
+		};
+		const refundResponse = await client.refund.refund(chargeResponse.transactionId, refundRequest);
 
+		let expectedResponse:RefundResponse = EmptyObjectBuilder.refundResponse() as unknown as RefundResponse;
+		expectedResponse =
+		{
+			...expectedResponse,
+			currencyCode: chargeResponse.currencyCode,
+			description: chargeResponse.description,
+			gatewayTransactionId: expect.any(String),
+			merchantAccountReferenceId: expect.any(String),
+			amount: refundRequest.amount,
+			transactionStatus: TransactionStatus.Declined,
+			responseCode: ResponseCode.HardDeclineInvalidAmount,
+			message: expect.stringContaining("invalid amount"),
+			merchantTransactionId: refundRequest.merchantTransactionId,
+			disableCustomerRecovery: refundRequest.disableCustomerRecovery ?? false,
+			paymentMethod: {
+				...chargeResponse.paymentMethod,
+				dateCreated: expect.any(Date),
+			},
+			response: {
+				...chargeResponse.response,
+				cvvMessage: expect.stringContaining("invalid amount"),
+			},
+			shippingAddress: chargeResponse.shippingAddress,
+		} as unknown as RefundResponse;
+
+		expect(refundResponse, "Refund response to match expected values").toEqual(expectedResponse);
 	});
 });

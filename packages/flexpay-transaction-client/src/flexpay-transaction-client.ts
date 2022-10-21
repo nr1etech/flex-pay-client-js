@@ -1,4 +1,4 @@
-import { TransactionClient, ClientOptions, SortOrder, Transaction, TransactionListItem, CreateCreditCardPaymentMethodRequest, CreateCreditCardPaymentMethodResponse, CreateTokenizedPaymentMethodRequest, PaymentMethodListItem, PaymentMethod, UpdatePaymentMethodRequest, UpdatePaymentMethodResponse, RedactPaymentMethodResponse, RecachePaymentMethodResponse, ChargeCreditCardRequest, ChargeCreditCardResponse, ChargeTokenizedPaymentMethodRequest, ChargeTokenizedPaymentMethodResponse, ChargeGatewayPaymentMethodRequest, ChargeGatewayPaymentMethodResponse, AuthorizeCreditCardRequest, AuthorizeCreditCardResponse, AuthorizeTokenizedPaymentMethodRequest, AuthorizeTokenizedPaymentMethodResponse, AuthorizeGatewayPaymentMethodRequest, AuthorizeGatewayPaymentMethodResponse, CaptureRequest, CaptureResponse, VoidRequest, VoidResponse, RefundFullRequest, RefundFullResponse, RefundPartialRequest, RefundPartialResponse, HealthCheckResponse, CreateTokenizedPaymentMethodResponse } from ".";
+import { TransactionClient, ClientOptions, SortOrder, TransactionListItemResponse, CreateCreditCardPaymentMethodRequest, CreateCreditCardPaymentMethodResponse, CreateTokenizedPaymentMethodRequest, PaymentMethodListItem, PaymentMethod, UpdatePaymentMethodRequest, UpdatePaymentMethodResponse, RedactPaymentMethodResponse, RecachePaymentMethodResponse, ChargeCreditCardRequest, ChargeCreditCardResponse, ChargeTokenizedPaymentMethodRequest, ChargeTokenizedPaymentMethodResponse, ChargeGatewayPaymentMethodRequest, ChargeGatewayPaymentMethodResponse, AuthorizeCreditCardRequest, AuthorizeCreditCardResponse, AuthorizeTokenizedPaymentMethodRequest, AuthorizeTokenizedPaymentMethodResponse, AuthorizeGatewayPaymentMethodRequest, AuthorizeGatewayPaymentMethodResponse, CaptureRequest, CaptureResponse, VoidRequest, VoidResponse, HealthCheckResponse, CreateTokenizedPaymentMethodResponse, RefundRequest, RefundResponse, TransactionResponse } from ".";
 
 export class FlexPayTransactionClient {
 	public transactions:Transactions;
@@ -39,19 +39,19 @@ class Transactions {
 		private client:TransactionClient
 	) { }
 
-	async getTransaction(transactionId:string):Promise<Transaction> {
+	async getTransaction(transactionId:string):Promise<TransactionResponse> {
 		const uri = `/transactions/${encodeURIComponent(transactionId)}`;
 
-		return await this.client.executeRequest<Transaction>(uri, "GET", { entityContainerPropertyName: "transaction" });
+		return await this.client.executeRequest<TransactionResponse>(uri, "GET", { entityContainerPropertyName: "transaction" });
 	}
 
-	async getTransactionByMerchantTransactionId(merchantTransactionId:string):Promise<Transaction> {
+	async getTransactionByMerchantTransactionId(merchantTransactionId:string):Promise<TransactionResponse> {
 		const uri = `/transactions/byMerchantTransactionId/${encodeURIComponent(merchantTransactionId)}`;
 
-		return await this.client.executeRequest<Transaction>(uri, "GET", { entityContainerPropertyName: "transaction" });
+		return await this.client.executeRequest<TransactionResponse>(uri, "GET", { entityContainerPropertyName: "transaction" });
 	}
 
-	async getTransactionList(pageId:string|null = null, pageSize:number = 20, sortOrder:SortOrder = SortOrder.Ascending):Promise<TransactionListItem[]> {
+	async getTransactionList(pageId:string|null = null, pageSize:number = 20, sortOrder:SortOrder = SortOrder.Ascending):Promise<TransactionListItemResponse[]> {
 		const uri = "/transactions";
 
 		pageSize = this.client.constrainPageSize(pageSize);
@@ -63,7 +63,7 @@ class Transactions {
 		};
 		const requestOptions = { listPropertyName: "transactions", entityContainerPropertyName: undefined };
 
-		return await this.client.executeRequest<TransactionListItem[]>(uri, "GET", requestOptions, undefined, queryParameters);
+		return await this.client.executeRequest<TransactionListItemResponse[]>(uri, "GET", requestOptions, undefined, queryParameters);
 	}
 }
 
@@ -252,24 +252,14 @@ class Refund {
 		private client:TransactionClient
 	) { }
 
-	async refundFull(transactionId:string, refund:RefundFullRequest):Promise<RefundFullResponse> {
+	async refund(transactionId:string, refund:RefundRequest):Promise<RefundResponse> {
 		const uri = `/transactions/${encodeURIComponent(transactionId)}/refund`;
 
 		const request = {
 			"transaction": refund,
 		};
 
-		return await this.client.executeRequest<RefundFullResponse>(uri, "POST", { entityContainerPropertyName: "transaction" }, request);
-	}
-
-	async refundPartial(transactionId:string, refund:RefundPartialRequest):Promise<RefundPartialResponse> {
-		const uri = `/transactions/${encodeURIComponent(transactionId)}/refund`;
-
-		const request = {
-			"transaction": refund,
-		};
-
-		return await this.client.executeRequest<RefundPartialResponse>(uri, "POST", { entityContainerPropertyName: "transaction" }, request);
+		return await this.client.executeRequest<RefundResponse>(uri, "POST", { entityContainerPropertyName: "transaction" }, request);
 	}
 }
 
