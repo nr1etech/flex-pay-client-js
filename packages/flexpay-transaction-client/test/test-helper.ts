@@ -1,4 +1,4 @@
-import { ResponseCode, TransactionStatus, TransactionType } from "../src";
+import { ResponseCode, StorageState, TransactionStatus, TransactionType } from "../src";
 
 export function consoleJson(input:unknown) {
 	if (input !== undefined) {
@@ -142,10 +142,10 @@ export const EmptyObjectBuilder = {
 		},
 		paymentMethod: {
 			paymentMethodId: expect.any(String),
-			creditCardNumber: null,
+			creditCardNumber: expect.any(String),
 			expiryMonth: null,
 			expiryYear: null,
-			cvv: null,
+			cvv: expect.any(String),
 			firstName: null,
 			lastName: null,
 			fullName: null,
@@ -164,7 +164,7 @@ export const EmptyObjectBuilder = {
 			firstSixDigits: null,
 			cardType: null,
 			dateCreated: expect.any(Date),
-			storageState: null,
+			storageState: StorageState.Cached
 		},
 		transactionId: expect.any(String),
 		transactionDate: expect.any(Date),

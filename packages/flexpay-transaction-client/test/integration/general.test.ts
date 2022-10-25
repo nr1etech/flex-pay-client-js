@@ -1039,6 +1039,10 @@ describe("Authorize", () => {
 			paymentMethod: {
 				...expectedResponse.paymentMethod,
 				...authRequest.paymentMethod,
+				fullName: expect.any(String),
+				cardType: sandbox.creditCards.visa.cardType,
+				customerId: authRequest.customerId,
+				paymentMethodType: PaymentMethodType.GatewayPaymentMethodId,
 			},
 			response: {
 				...expectedResponse.response,
@@ -1754,6 +1758,7 @@ describe("Refund", () => {
 			},
 			response: chargeResponse.response,
 			shippingAddress: chargeResponse.shippingAddress,
+			dateFirstAttempt: expect.any(Date),
 		} as unknown as RefundResponse;
 
 		expect(refundResponse, "Refund response to match expected values").toEqual(expectedResponse);
