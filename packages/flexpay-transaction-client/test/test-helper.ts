@@ -14,7 +14,7 @@ export async function sleep(seconds:number) {
 }
 
 export function generateUniqueMerchantTransactionId() {
-	return (new Date()).getTime().toString();
+	return (new Date()).getTime().toString() + Math.floor(Math.random() * 10000);
 }
 
 export const EmptyObjectBuilder = {

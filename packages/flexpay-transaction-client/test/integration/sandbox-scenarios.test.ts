@@ -1,6 +1,8 @@
 import { FlexPayTransactionClient, sandbox, PaymentModel, ChargeCreditCardRequest } from "../../src";
-import { consoleJson, generateUniqueMerchantTransactionId } from "../test-helper";
+import { consoleJson, generateUniqueMerchantTransactionId, sleep } from "../test-helper";
+jest.setTimeout(300000);	// 5 minutes
 
+const INTER_TRANSACTION_SLEEP_SECONDS = 10;
 let GATEWAY_TOKEN:string;
 let AUTHORIZATION_TOKEN:string;
 let client:FlexPayTransactionClient;
@@ -127,13 +129,15 @@ describe("Void and Refund", () => {
 		const transaction = await client.charge.chargeCreditCard(chargeRequest);
 		expect(transaction.responseCode, "Credit Card Charge should be approved").toEqual(sandbox.refund.scenario1.step1Charge.responseCode);
 
+		await sleep(INTER_TRANSACTION_SLEEP_SECONDS);
+
 		const voidResult = await client.void.void(transaction.transactionId, {
-			merchantTransactionId: transaction.merchantTransactionId,
+			merchantTransactionId: generateUniqueMerchantTransactionId(),
 		});
 		expect(voidResult.responseCode, "Void should fail").toEqual(sandbox.refund.scenario1.step2FailedVoid.responseCode);
 
 		const refundResult = await client.refund.refund(transaction.transactionId, {
-			merchantTransactionId: transaction.merchantTransactionId,
+			merchantTransactionId: generateUniqueMerchantTransactionId(),
 		});
 		expect(refundResult.responseCode, "Refund should be approved").toEqual(sandbox.refund.scenario1.step3Refund.responseCode);
 	});
@@ -145,8 +149,10 @@ describe("Void and Refund", () => {
 		const transaction = await client.charge.chargeCreditCard(chargeRequest);
 		expect(transaction.responseCode, "Credit Card Charge should be approved").toEqual(sandbox.refund.scenario2.step1Charge.responseCode);
 
+		await sleep(INTER_TRANSACTION_SLEEP_SECONDS);
+
 		const voidResult = await client.void.void(transaction.transactionId, {
-			merchantTransactionId: transaction.merchantTransactionId,
+			merchantTransactionId: generateUniqueMerchantTransactionId(),
 		});
 		expect(voidResult.responseCode, "Void should be approved").toEqual(sandbox.refund.scenario2.step2Void.responseCode);
 	});
@@ -158,8 +164,10 @@ describe("Void and Refund", () => {
 		const transaction = await client.charge.chargeCreditCard(chargeRequest);
 		expect(transaction.responseCode, "Credit Card Charge should be approved").toEqual(sandbox.refund.scenario3.step1Charge.responseCode);
 
+		await sleep(INTER_TRANSACTION_SLEEP_SECONDS);
+
 		const refundResult = await client.refund.refund(transaction.transactionId, {
-			merchantTransactionId: transaction.merchantTransactionId,
+			merchantTransactionId: generateUniqueMerchantTransactionId(),
 		});
 		expect(refundResult.responseCode, "Refund should be approved").toEqual(sandbox.refund.scenario3.step2Refund.responseCode);
 	});
@@ -174,9 +182,11 @@ describe("Partial Refund", () => {
 		const transaction = await client.charge.chargeCreditCard(chargeRequest);
 		expect(transaction.responseCode, "Credit Card Charge should be approved").toEqual(sandbox.partialRefund.scenario1.step1Charge.responseCode);
 
+		await sleep(INTER_TRANSACTION_SLEEP_SECONDS);
+
 		const refundResult = await client.refund.refund(transaction.transactionId, {
 			amount: sandbox.partialRefund.scenario1.step2Refund.amount,
-			merchantTransactionId: transaction.merchantTransactionId,
+			merchantTransactionId: generateUniqueMerchantTransactionId(),
 		});
 		expect(refundResult.responseCode, "Refund should be approved").toEqual(sandbox.partialRefund.scenario1.step2Refund.responseCode);
 	});
@@ -188,15 +198,17 @@ describe("Partial Refund", () => {
 		const transaction = await client.charge.chargeCreditCard(chargeRequest);
 		expect(transaction.responseCode, "Credit Card Charge should be approved").toEqual(sandbox.partialRefund.scenario2.step1Charge.responseCode);
 
+		await sleep(INTER_TRANSACTION_SLEEP_SECONDS);
+
 		const refund1Result = await client.refund.refund(transaction.transactionId, {
 			amount: sandbox.partialRefund.scenario2.step2PartialRefund.amount,
-			merchantTransactionId: transaction.merchantTransactionId,
+			merchantTransactionId: generateUniqueMerchantTransactionId(),
 		});
 		expect(refund1Result.responseCode, "Partial Refund 1 should be approved").toEqual(sandbox.partialRefund.scenario2.step2PartialRefund.responseCode);
 
 		const refund2Result = await client.refund.refund(transaction.transactionId, {
 			amount: sandbox.partialRefund.scenario2.step3PartialRefund.amount,
-			merchantTransactionId: transaction.merchantTransactionId,
+			merchantTransactionId: generateUniqueMerchantTransactionId(),
 		});
 		expect(refund2Result.responseCode, "Partial Refund 2 should be approved").toEqual(sandbox.partialRefund.scenario2.step3PartialRefund.responseCode);
 	});
@@ -208,9 +220,11 @@ describe("Partial Refund", () => {
 		const transaction = await client.charge.chargeCreditCard(chargeRequest);
 		expect(transaction.responseCode, "Credit Card Charge should be approved").toEqual(sandbox.partialRefund.scenario3.step1Charge.responseCode);
 
+		await sleep(INTER_TRANSACTION_SLEEP_SECONDS);
+
 		const refundResult = await client.refund.refund(transaction.transactionId, {
 			amount: sandbox.partialRefund.scenario3.step2FailedRefund.amount,
-			merchantTransactionId: transaction.merchantTransactionId,
+			merchantTransactionId: generateUniqueMerchantTransactionId(),
 		});
 		expect(refundResult.responseCode, "Partial Refund should be declined").toEqual(sandbox.partialRefund.scenario3.step2FailedRefund.responseCode);
 	});
