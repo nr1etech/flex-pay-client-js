@@ -10,6 +10,7 @@ export enum TransactionType {
 	Capture = "Capture",
 	Void = "Void",
 	Refund = "Refund",
+	UpdatePaymentMethod = "UpdatePaymentMethod",
 }
 
 export enum PaymentMethodType {
@@ -21,6 +22,7 @@ export enum GatewayType {
 	"usa_epay" = "usa_epay",
 	"checkout_v2" = "checkout_v2",
 	"test" = "test",
+	"cyber_source_direct" = "cyber_source_direct",
 }
 
 export enum CardType {
