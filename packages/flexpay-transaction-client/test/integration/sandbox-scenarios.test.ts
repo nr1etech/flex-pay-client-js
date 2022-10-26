@@ -144,7 +144,7 @@ describe("Void and Refund", () => {
 
 	it("Scenario 2 - Void", async () => {
 		const chargeRequest = getBasicChargeRequest();
-		chargeRequest.amount = sandbox.refund.scenario1.step1Charge.amount;
+		chargeRequest.amount = sandbox.refund.scenario2.step1Charge.amount;
 
 		const transaction = await client.charge.chargeCreditCard(chargeRequest);
 		expect(transaction.responseCode, "Credit Card Charge should be approved").toEqual(sandbox.refund.scenario2.step1Charge.responseCode);
