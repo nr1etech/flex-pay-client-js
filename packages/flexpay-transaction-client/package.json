@@ -22,8 +22,9 @@
 		"build": "npm run tsc",
 		"lint": "eslint ./src --ext .ts",
 		"test": "jest unit/ --no-verbose --silent --noStackTrace",
-		"test-loud": "jest unit/ --verbose --no-silent --no-noStackTrace",
-		"integration-test": "jest integration/ --no-verbose --silent --noStackTrace"
+		"test:loud": "jest unit/ --verbose --no-silent --no-noStackTrace",
+		"test:integration-prod": "jest integration/production-env --no-verbose --silent --noStackTrace",
+		"test:integration-sandbox": "jest integration/sandbox-env --no-verbose --silent --noStackTrace"
 	},
 	"devDependencies": {
 		"@types/jest": "^29.1.2",
