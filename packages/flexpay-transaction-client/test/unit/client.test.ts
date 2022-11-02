@@ -11,7 +11,7 @@ describe("Client instantiation", () => {
 		expect(() => {
 			new FlexPayTransactionClient({
 				baseUrl: "https://example.com",
-				authorizationToken: "",
+				apiKey: "",
 			});
 		}).not.toThrow();
 	});
@@ -20,7 +20,7 @@ describe("Client instantiation", () => {
 		expect(() => {
 			new FlexPayTransactionClient({
 				baseUrl: "example.com",
-				authorizationToken: "",
+				apiKey: "",
 			});
 		}).toThrow();
 	});
@@ -45,11 +45,11 @@ describe("Client instantiation", () => {
 
 	it("should return the base URL", () => {
 		const baseUrl = "https://example.com";
-		const authorizationToken = "hello world";
+		const apiKey = "hello world";
 
 		const client = new FlexPayTransactionClient({
 			baseUrl,
-			authorizationToken,
+			apiKey,
 		});
 
 		expect(client.getBaseUrl()).toEqual(baseUrl);
@@ -57,11 +57,11 @@ describe("Client instantiation", () => {
 
 	it("should update the authentication", () => {
 		const baseUrl = "https://example.com";
-		const authorizationToken = "hello world";
+		const apiKey = "hello world";
 
 		const client = new FlexPayTransactionClient({
 			baseUrl,
-			authorizationToken,
+			apiKey,
 		});
 
 		expect(() => {
@@ -73,7 +73,7 @@ describe("Client instantiation", () => {
 describe("Client error handling", () => {
 	it("should return a FetchError type", async () => {
 		const client = new FlexPayTransactionClient({
-			authorizationToken: "testauth",
+			apiKey: "testauth",
 			baseUrl: "https://example.com"
 		});
 
@@ -94,7 +94,7 @@ describe("Client error handling", () => {
 	])
 	("should return an AuthorizationError type for %s", async (testName:string, status:number) => {
 		const client = new FlexPayTransactionClient({
-			authorizationToken: "testauth",
+			apiKey: "testauth",
 			baseUrl: "https://example.com"
 		});
 
@@ -117,7 +117,7 @@ describe("Client error handling", () => {
 
 	it("should return a ResponseError type for 404s", async () => {
 		const client = new FlexPayTransactionClient({
-			authorizationToken: "testauth",
+			apiKey: "testauth",
 			baseUrl: "https://example.com"
 		});
 
@@ -140,7 +140,7 @@ describe("Client error handling", () => {
 
 	it("should return a ResponseError type for unexpected content", async () => {
 		const client = new FlexPayTransactionClient({
-			authorizationToken: "testauth",
+			apiKey: "testauth",
 			baseUrl: "https://example.com"
 		});
 
@@ -170,7 +170,7 @@ describe("Client error handling", () => {
 	])
 	("should return a ResponseError for a non-200 status (%s)", async (testName:string, status:number) => {
 		const client = new FlexPayTransactionClient({
-			authorizationToken: "testauth",
+			apiKey: "testauth",
 			baseUrl: "https://example.com"
 		});
 
@@ -193,7 +193,7 @@ describe("Client error handling", () => {
 
 	it("should call console.debug when debugOutput is enabled", async () => {
 		const client = new FlexPayTransactionClient({
-			authorizationToken: "testauth",
+			apiKey: "testauth",
 			baseUrl: "https://example.com",
 			debugOutput: true,
 		});
@@ -214,7 +214,7 @@ describe("Client error handling", () => {
 
 	it("should not call console.debug when debugOutput is disabled", async () => {
 		const client = new FlexPayTransactionClient({
-			authorizationToken: "testauth",
+			apiKey: "testauth",
 			baseUrl: "https://example.com",
 		});
 
@@ -234,7 +234,7 @@ describe("Client error handling", () => {
 
 	it("should not call console.log", async () => {
 		const client = new FlexPayTransactionClient({
-			authorizationToken: "testauth",
+			apiKey: "testauth",
 			baseUrl: "https://example.com",
 			debugOutput: true,
 		});
@@ -255,7 +255,7 @@ describe("Client error handling", () => {
 
 	it("should not call console.info", async () => {
 		const client = new FlexPayTransactionClient({
-			authorizationToken: "testauth",
+			apiKey: "testauth",
 			baseUrl: "https://example.com",
 			debugOutput: true,
 		});

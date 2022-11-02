@@ -2,6 +2,8 @@ import * as Errors from "./errors";
 import fetch, { Response } from "node-fetch";
 import { ClientOptions, RequestOptions, defaultRequestOptions } from "./client-types";
 
+const base64RE = /^[a-zA-Z0-9+/]+(==?)?$/;
+
 export class TransactionClient {
 	private baseUrl:string;
 	private authorizationToken:string;
@@ -20,9 +22,12 @@ export class TransactionClient {
 		}
 
 		// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-		if (options.authorizationToken === undefined) throw new Errors.ArgumentError("authorizationToken is invalid");
+		if (options.apiKey === undefined) throw new Errors.ArgumentError("apiKey is invalid");
+		if (!base64RE.test(options.apiKey)) {	// simple (incomplete) base64 check to fail early on invalid api keys
+			throw new Errors.ArgumentError("apiKey is invalid");
+		}
 
-		this.authorizationToken = options.authorizationToken;
+		this.authorizationToken = options.apiKey;
 		this.debugOutput = options.debugOutput ?? false;
 	}
 

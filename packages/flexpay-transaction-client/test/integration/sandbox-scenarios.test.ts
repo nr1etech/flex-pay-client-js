@@ -4,16 +4,16 @@ jest.setTimeout(300000);	// 5 minutes
 
 const INTER_TRANSACTION_SLEEP_SECONDS = 10;
 let GATEWAY_TOKEN:string;
-let AUTHORIZATION_TOKEN:string;
+let API_KEY:string;
 let client:FlexPayTransactionClient;
 
 beforeAll(() => {
 	consoleJson(undefined);	// Just calling this so TS doesn't complain about the import
 
 	GATEWAY_TOKEN = process.env["X_FP_GATEWAY_TOKEN"] as string;
-	AUTHORIZATION_TOKEN = process.env["X_FP_AUTH_TOKEN"] as string;
+	API_KEY = process.env["X_FP_API_KEY"] as string;
 	client = new FlexPayTransactionClient({
-		authorizationToken: AUTHORIZATION_TOKEN,
+		apiKey: API_KEY,
 		debugOutput: false,
 	});
 });

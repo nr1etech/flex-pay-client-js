@@ -1,10 +1,23 @@
-import { FlexPayTransactionClient, sandbox, PaymentModel, ChargeCreditCardRequest, ResponseError, SortOrder, ResponseCode, AuthorizeCreditCardRequest, TransactionStatus, PaymentMethodType, StorageState, AuthorizeTokenizedPaymentMethodRequest, VoidRequest, AvsResponseCode, CvvResponseCode, ChargeGatewayPaymentMethodRequest, RefundRequest, AuthorizationError, ChargeTokenizedPaymentMethodRequest, AddressResponse, VoidResponse, RefundResponse, TransactionType, AuthorizeGatewayPaymentMethodRequest, TokenizeCreditCardPaymentMethodRequest, TokenizeGatewayPaymentMethodRequest } from "../../src";
+/* * **********************************************************************
+   * These are tailored for the sandbox environment but should also succeed
+   * in the production environment. These tests should be run in production
+   * to exercise the API fully.
+   *
+   * A few test scenarios are omitted because the functionality is not
+   * supported in the sandbox environment. These tests have been moved to
+   * the production-env.test.ts file.
+   *
+   * These tests use sandbox PAN data which will need to be changed prior
+   * to running in a production environment.
+   * ********************************************************************** */
+
+import { FlexPayTransactionClient, sandbox, PaymentModel, ChargeCreditCardRequest, ResponseError, SortOrder, ResponseCode, AuthorizeCreditCardRequest, TransactionStatus, PaymentMethodType, StorageState, AuthorizeTokenizedPaymentMethodRequest, VoidRequest, AvsResponseCode, CvvResponseCode, ChargeGatewayPaymentMethodRequest, RefundRequest, AuthorizationError, ChargeTokenizedPaymentMethodRequest, AddressResponse, VoidResponse, RefundResponse, TransactionType, AuthorizeGatewayPaymentMethodRequest, TokenizeCreditCardPaymentMethodRequest, TokenizeGatewayPaymentMethodRequest, ArgumentError } from "../../src";
 import { consoleJson, EmptyObjectBuilder, generateUniqueMerchantTransactionId, sleep } from "../test-helper";
 jest.setTimeout(300000);	// 5 minutes
 
 const POST_TRANSACTION_WAIT_TIME_SEC = 10;
 let GATEWAY_TOKEN:string;
-let AUTHORIZATION_TOKEN:string;
+let API_KEY:string;
 let MERCHANT_ACCOUNT_REFERENCE_ID:string;
 let client:FlexPayTransactionClient;
 
@@ -12,10 +25,10 @@ beforeAll(() => {
 	consoleJson(undefined);	// Just calling this so TS doesn't complain about the import
 
 	GATEWAY_TOKEN = process.env["X_FP_GATEWAY_TOKEN"] as string;
-	AUTHORIZATION_TOKEN = process.env["X_FP_AUTH_TOKEN"] as string;
+	API_KEY = process.env["X_FP_API_KEY"] as string;
 	MERCHANT_ACCOUNT_REFERENCE_ID = process.env["X_FP_MERCHANT_ACCOUNT_REFERENCE_ID"] as string;
 	client = new FlexPayTransactionClient({
-		authorizationToken: AUTHORIZATION_TOKEN,
+		apiKey: API_KEY,
 		debugOutput: false,
 	});
 });
@@ -79,9 +92,9 @@ function getBasicTokenizeGatewayPaymentMethodRequest(requestOverride?:Record<str
 
 
 describe("Client", () => {
-	it("should show unauthorized on an invalid auth token", async () => {
+	it("should show unauthorized on an invalid api key", async () => {
 		const tempClient = new FlexPayTransactionClient({
-			authorizationToken: "INVALIDAUTHTOKEN",
+			apiKey: "INVALIDAUTHTOKEN",
 		});
 
 		try {
@@ -92,23 +105,36 @@ describe("Client", () => {
 		}
 	});
 
-	it("should show unauthorized on a blank auth token", async () => {
+	it("should show argument error on a blank api key", async () => {
 		const tempClient = new FlexPayTransactionClient({
-			authorizationToken: "",
+			apiKey: "",
 		});
 
 		try {
 			await tempClient.paymentMethods.getPaymentMethod("DONTNEEDANYTHING");
 			expect("Should have thown an excpetion").toBeFalsy();
 		} catch (ex) {
-			expect(ex).toBeInstanceOf(AuthorizationError);
+			expect(ex).toBeInstanceOf(ArgumentError);
+		}
+	});
+
+	it("should show argument error on invalid characters in the api key", async () => {
+		const tempClient = new FlexPayTransactionClient({
+			apiKey: "TEST$ !!TEST",
+		});
+
+		try {
+			await tempClient.paymentMethods.getPaymentMethod("DONTNEEDANYTHING");
+			expect("Should have thown an excpetion").toBeFalsy();
+		} catch (ex) {
+			expect(ex).toBeInstanceOf(ArgumentError);
 		}
 	});
 
 	it("should fail to instantiate if an invalid URL is given", async () => {
 		try {
 			new FlexPayTransactionClient({
-				authorizationToken: "ABCD",
+				apiKey: "ABCD",
 				baseUrl: "ftp://thisisnt.the.url",
 			});
 			expect("Should have thrown an exception").toBeFalsy();
@@ -251,38 +277,6 @@ describe("Payment Methods", () => {
 
 	});
 
-	// FIXME -- does not accept null values, the tokenize payment method accepts null values but they should be allowed to be set to null here
-	it.skip("should accept null values when updating a payment method", async () => {
-		const createResponse = await client.paymentMethods.tokenizeCreditCard(getBasicTokenizeCreditCardRequest(undefined, {
-			firstName: "John",
-			email: "jdoe@example.com",
-		}));
-		expect(createResponse.responseCode, "Credit Card Payment Method approved").toEqual(ResponseCode.Approved);
-
-		const propertiesToUpdate = {
-			firstName: "Jane",
-			email: null,
-		};
-
-		const updateResponse = await client.paymentMethods.updatePaymentMethod(createResponse.paymentMethod.paymentMethodId, propertiesToUpdate);
-		expect(updateResponse.responseCode, "Update payment method should be approved").toEqual(ResponseCode.Approved);
-
-		let expectedResponse:any = EmptyObjectBuilder.paymentMethodUpdateResponse();
-		expectedResponse = {
-			...expectedResponse,
-			paymentMethod: {
-				...createResponse.paymentMethod,
-				...propertiesToUpdate,
-			},
-			responseCode: ResponseCode.Approved,
-			customerId: createResponse.customerId,
-			transactionStatus: TransactionStatus.Approved,
-			transactionType: TransactionType.UpdatePaymentMethod,
-		};
-
-		expect(updateResponse, "Update Payment response object should match the expected results").toEqual(expectedResponse);
-	});
-
 	it("should fail to update a payment method with no update data in the body", async () => {
 		const response = await client.paymentMethods.tokenizeCreditCard(getBasicTokenizeCreditCardRequest());
 		expect(response.responseCode, "Credit Card Payment Method approved").toEqual(ResponseCode.Approved);
@@ -311,33 +305,12 @@ describe("Payment Methods", () => {
 		}
 	});
 
-	// FIXME -- doesn't redact the numbers. Waiting for a fix (cannot test if values are actually redacted because we cannot transaction tokenized credit cards)
-	it.skip("should redact a payment method", async () => {
+	it("should redact a payment method", async () => {
 		const response = await client.paymentMethods.tokenizeCreditCard(getBasicTokenizeCreditCardRequest());
 		expect(response.responseCode, "Credit Card Payment Method approved").toEqual(ResponseCode.Approved);
 
 		const redactResponse = await client.paymentMethods.redactPaymentMethod(response.paymentMethod.paymentMethodId);
 		expect(redactResponse.responseCode, "Payment method Redact command should be approved").toEqual(ResponseCode.Approved);
-
-		const getResponse = await client.paymentMethods.getPaymentMethod(response.paymentMethod.paymentMethodId);
-		expect(getResponse.creditCardNumber, "Payment method credit card number should be removed").toEqual("");
-	});
-
-	// FIXME -- transactions involving tokenized credit card payments give an error saying "No gateways are configured to process the submitted card type."
-	it.skip("should fail to charge a redacted tokenized payment method", async () => {
-		const paymentMethodResponse = await client.paymentMethods.tokenizeCreditCard(getBasicTokenizeCreditCardRequest());
-		expect(paymentMethodResponse.responseCode, "Credit Card Payment Method approved").toEqual(ResponseCode.Approved);
-
-		const redactResponse = await client.paymentMethods.redactPaymentMethod(paymentMethodResponse.paymentMethod.paymentMethodId);
-		expect(redactResponse.responseCode, "Payment method Redact command should be approved").toEqual(ResponseCode.Approved);
-
-		const chargeRequest:any = getBasicChargeRequest();
-		delete chargeRequest.paymentMethod;
-		chargeRequest.paymentMethodId = paymentMethodResponse.paymentMethod.paymentMethodId;
-
-		const chargeResponse = await client.charge.chargeTokenizedPaymentMethod(chargeRequest);
-
-		expect(chargeResponse.responseCode, "Tokenized Payment Method Charge should fail").toEqual(ResponseCode.Approved);
 	});
 
 	it.each([

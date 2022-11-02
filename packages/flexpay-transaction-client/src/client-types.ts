@@ -1,5 +1,5 @@
 export interface ClientOptions {
-	authorizationToken: string;
+	apiKey: string;
 	baseUrl?: string | undefined;
 	debugOutput?: boolean;
 }
