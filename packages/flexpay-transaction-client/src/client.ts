@@ -6,7 +6,7 @@ const base64RE = /^[a-zA-Z0-9+/]+(==?)?$/;
 
 export class TransactionClient {
 	private baseUrl:string;
-	private authorizationToken:string;
+	private apiKey:string;
 	private apiVersion = "/v1";
 	private debugOutput = false;
 
@@ -21,14 +21,19 @@ export class TransactionClient {
 			this.baseUrl = "https://api.flexpay.io";
 		}
 
-		// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-		if (options.apiKey === undefined) throw new Errors.ArgumentError("apiKey is invalid");
-		if (!base64RE.test(options.apiKey)) {	// simple (incomplete) base64 check to fail early on invalid api keys
-			throw new Errors.ArgumentError("apiKey is invalid");
+		if (!this.isValidApiKey(options.apiKey)) throw new Errors.ArgumentError("apiKey is invalid");
+
+		this.apiKey = options.apiKey;
+		this.debugOutput = options.debugOutput ?? false;
+	}
+
+	private isValidApiKey(apiKey:string|undefined):boolean {
+		if (apiKey === undefined) return false
+		if (!base64RE.test(apiKey)) {	// simple (incomplete) base64 check to fail early on invalid api keys
+			return false;
 		}
 
-		this.authorizationToken = options.apiKey;
-		this.debugOutput = options.debugOutput ?? false;
+		return true;
 	}
 
 	/**
@@ -39,10 +44,14 @@ export class TransactionClient {
 	}
 
 	/**
-	 * Set the authorization token. Used by all future requests.
+	 * Set the api key. Used by all future requests.
 	 */
-	public setAuthorizationToken(authorizationToken:string):void {
-		this.authorizationToken = authorizationToken;
+	public setApiKey(apiKey:string):void {
+		if (this.isValidApiKey(apiKey)) {
+			this.apiKey = apiKey;
+		} else {
+			throw new Errors.ArgumentError("Invalid API Key");
+		}
 	}
 
 	// If there is a network response with JSON then a tuple is returned (boolean success, object jsonContent). If any exceptions are thrown they are not handled by this method.
@@ -84,7 +93,7 @@ export class TransactionClient {
 				method,
 				headers: {
 					"Content-Type": "application/json",
-					"Authorization": `Basic ${this.authorizationToken}`,
+					"Authorization": `Basic ${this.apiKey}`,
 				},
 				body: requestData,
 			});

@@ -11,7 +11,7 @@ describe("Client instantiation", () => {
 		expect(() => {
 			new FlexPayTransactionClient({
 				baseUrl: "https://example.com",
-				apiKey: "",
+				apiKey: "ABCD",
 			});
 		}).not.toThrow();
 	});
@@ -19,8 +19,8 @@ describe("Client instantiation", () => {
 	it("should fail with an invalid URL", () => {
 		expect(() => {
 			new FlexPayTransactionClient({
-				baseUrl: "example.com",
-				apiKey: "",
+				baseUrl: "ftp://example.com",
+				apiKey: "ABCD",
 			});
 		}).toThrow();
 	});
@@ -45,7 +45,7 @@ describe("Client instantiation", () => {
 
 	it("should return the base URL", () => {
 		const baseUrl = "https://example.com";
-		const apiKey = "hello world";
+		const apiKey = "abcd";
 
 		const client = new FlexPayTransactionClient({
 			baseUrl,
@@ -57,7 +57,7 @@ describe("Client instantiation", () => {
 
 	it("should update the authentication", () => {
 		const baseUrl = "https://example.com";
-		const apiKey = "hello world";
+		const apiKey = "abcd";
 
 		const client = new FlexPayTransactionClient({
 			baseUrl,
@@ -65,8 +65,22 @@ describe("Client instantiation", () => {
 		});
 
 		expect(() => {
-			client.setAuthorizationToken("this is it");
+			client.setApiKey("ABCD");
 		}).not.toThrow();
+	});
+
+	it("should fail to update the authentication", () => {
+		const baseUrl = "https://example.com";
+		const apiKey = "abcd";
+
+		const client = new FlexPayTransactionClient({
+			baseUrl,
+			apiKey,
+		});
+
+		expect(() => {
+			client.setApiKey("invalid api key");
+		}).toThrow();
 	});
 });
 

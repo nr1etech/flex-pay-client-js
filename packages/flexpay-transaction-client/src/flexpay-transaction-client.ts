@@ -42,8 +42,8 @@ export class FlexPayTransactionClient {
 		return this.client.getBaseUrl();
 	}
 
-	public setAuthorizationToken(authorizationToken:string):void {
-		this.client.setAuthorizationToken(authorizationToken);
+	public setApiKey(authorizationToken:string):void {
+		this.client.setApiKey(authorizationToken);
 	}
 }
 
