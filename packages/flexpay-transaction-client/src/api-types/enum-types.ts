@@ -129,6 +129,11 @@ export enum CvvResponseCode {
 	ShouldBePresent = "S",
 }
 
+// New field without defined values
+export enum EngagedRecoverState {
+	State0 = 0,
+}
+
 export enum ResponseCode {
 	// Success
 	Approved = "10000",

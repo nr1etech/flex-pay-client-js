@@ -1,4 +1,4 @@
-import { FlexPayTransactionClient, ClientOptions, FetchError, AuthorizationError, ResponseError } from "../../src";
+import { FlexPayTransactionClient, ClientOptions, FetchError, AuthorizationError, ResponseError, TransactionClient } from "../../src";
 import * as NodeFetch from "node-fetch";
 
 beforeEach(() => {
@@ -292,4 +292,61 @@ describe("Client error handling", () => {
 	it.todo("should parse lists with an entity");
 	it.todo("should parse response witn no entity");
 	it.todo("should parse response with an entity");
+});
+
+describe("Utility functions", () => {
+	it.only.each([
+		"2022-12-01T22:00:00",
+		"2022-12-01T22:00:00.000",
+		"2022-12-01T22:00:00Z",
+		"2022-12-01T22:00:00.000Z",
+		"2022-12-01T22:00:00+1011",
+		"2022-12-01T22:00:00+10:11",
+		"2022-12-01T22:00:00.000Z",
+		"2022-12-01T22:00:00.000+1011",
+		"2022-12-01T22:00:00.000+10:11",
+	])("should convert valid date strings to Date objects [%s]", (testDateString:string) => {
+		const client = new TransactionClient({
+			apiKey: "testauth",
+			baseUrl: "https://example.com",
+			debugOutput: true,
+		});
+		const jsonDateParser = client["jsonDateParser"];
+
+		const result = jsonDateParser("", testDateString);
+		expect(result).toBeInstanceOf(Date);
+
+		// If no timezone was in the date string it should have converted it to UTC ("Z")
+		if (!/Z|([+-]\d{2}:?\d{2})$/.test(testDateString)) {
+			expect((result as Date).toUTCString()).toEqual(new Date(testDateString + "Z").toUTCString());
+		}
+	});
+
+	it.only.each([
+		"2022-11-01",					// no time component
+		"",								// empty
+		"Not a date at all",			// not a date at all
+		"2022-11-1T0:12:00",			// Day and Hours are not 2 digits
+		"00:12:12.000",					// No date part
+		"T00:12:12.001",				// No date part
+		"2022-11-01T00:00:00.00",		// Only 2 fractional seconds
+		"2022-11-01T00:00:00.00Z",		// Only 2 fractional seconds with zero timezone
+		"2022-11-01T00:00:00.00-1000",	// Only 2 fractional seconds with timezone
+		"2022-11-01T00:00:00.000+100",	// Timezone missing a digit
+		"2022-11-01T00:00:00.000-10:0",	// Timezone missing a digit
+		"2022-11-01T00:00:00.000-nope",	// Timezone wrong format
+		123,
+		true,
+	])("should not touch properties that are not date strings [%s]", (testValue:unknown) => {
+		const client = new TransactionClient({
+			apiKey: "testauth",
+			baseUrl: "https://example.com",
+			debugOutput: true,
+		});
+		const jsonDateParser = client["jsonDateParser"];
+
+		const result = jsonDateParser("", testValue);
+		expect(result).toEqual(testValue);
+		expect(typeof result).toEqual(typeof testValue);
+	});
 });

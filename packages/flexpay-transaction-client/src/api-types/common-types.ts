@@ -1,4 +1,4 @@
-import { CardType, GatewayType, PaymentMethodType, PaymentModel, StorageState, TransactionStatus, TransactionType } from "./enum-types";
+import { CardType, EngagedRecoverState, GatewayType, PaymentMethodType, PaymentModel, StorageState, TransactionStatus, TransactionType } from "./enum-types";
 
 export interface AddressRequest {
 	address1: string;
@@ -176,6 +176,7 @@ export interface BaseTransactionResponse {
 	shippingAddress: AddressResponse;
 	referenceData: string;
 	disableCustomerRecovery: boolean;
+	engagedRecoveryState: EngagedRecoverState;
 	customVariable1: string | null;
 	customVariable2: string | null;
 	customVariable3: string | null;
