@@ -93,39 +93,38 @@ function getBasicTokenizeGatewayPaymentMethodRequest(requestOverride?:Record<str
 
 describe("Client", () => {
 	it("should show unauthorized on an invalid api key", async () => {
-		const tempClient = new FlexPayTransactionClient({
-			apiKey: "INVALIDAUTHTOKEN",
-		});
-
 		try {
+			const tempClient = new FlexPayTransactionClient({
+				apiKey: "INVALIDAUTHTOKEN",
+			});
+
 			await tempClient.paymentMethods.getPaymentMethod("DONTNEEDANYTHING");
-			expect("Should have thown an excpetion").toBeFalsy();
+			expect("Should have thown an exception").toBeFalsy();
 		} catch (ex) {
 			expect(ex).toBeInstanceOf(AuthorizationError);
 		}
 	});
 
-	it("should show argument error on a blank api key", async () => {
-		const tempClient = new FlexPayTransactionClient({
-			apiKey: "",
-		});
+	it("should show argument error on a blank api key", () => {
 
 		try {
-			await tempClient.paymentMethods.getPaymentMethod("DONTNEEDANYTHING");
-			expect("Should have thown an excpetion").toBeFalsy();
+			const tempClient = new FlexPayTransactionClient({
+				apiKey: "",
+			});
+
+			expect("Should have thown an exception").toBeFalsy();
 		} catch (ex) {
 			expect(ex).toBeInstanceOf(ArgumentError);
 		}
 	});
 
-	it("should show argument error on invalid characters in the api key", async () => {
-		const tempClient = new FlexPayTransactionClient({
-			apiKey: "TEST$ !!TEST",
-		});
-
+	it("should show argument error on invalid characters in the api key", () => {
 		try {
-			await tempClient.paymentMethods.getPaymentMethod("DONTNEEDANYTHING");
-			expect("Should have thown an excpetion").toBeFalsy();
+			const tempClient = new FlexPayTransactionClient({
+				apiKey: "TEST$ !!TEST",
+			});
+
+			expect("Should have thown an exception").toBeFalsy();
 		} catch (ex) {
 			expect(ex).toBeInstanceOf(ArgumentError);
 		}
