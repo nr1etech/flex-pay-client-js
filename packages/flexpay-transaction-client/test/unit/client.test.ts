@@ -295,16 +295,21 @@ describe("Client error handling", () => {
 });
 
 describe("Utility functions", () => {
-	it.only.each([
+	it.each([
 		"2022-12-01T22:00:00",
+		"2022-12-01T22:00:00.0",
+		"2022-12-01T22:00:00.00",
 		"2022-12-01T22:00:00.000",
 		"2022-12-01T22:00:00Z",
 		"2022-12-01T22:00:00.000Z",
 		"2022-12-01T22:00:00+1011",
 		"2022-12-01T22:00:00+10:11",
-		"2022-12-01T22:00:00.000Z",
 		"2022-12-01T22:00:00.000+1011",
 		"2022-12-01T22:00:00.000+10:11",
+		"2022-12-01T22:00:00.0Z",
+		"2022-11-01T00:00:00.00",
+		"2022-11-01T00:00:00.00Z",
+		"2022-11-01T00:00:00.00-1000",
 	])("should convert valid date strings to Date objects [%s]", (testDateString:string) => {
 		const client = new TransactionClient({
 			apiKey: "testauth",
@@ -322,16 +327,13 @@ describe("Utility functions", () => {
 		}
 	});
 
-	it.only.each([
+	it.each([
 		"2022-11-01",					// no time component
 		"",								// empty
 		"Not a date at all",			// not a date at all
 		"2022-11-1T0:12:00",			// Day and Hours are not 2 digits
 		"00:12:12.000",					// No date part
 		"T00:12:12.001",				// No date part
-		"2022-11-01T00:00:00.00",		// Only 2 fractional seconds
-		"2022-11-01T00:00:00.00Z",		// Only 2 fractional seconds with zero timezone
-		"2022-11-01T00:00:00.00-1000",	// Only 2 fractional seconds with timezone
 		"2022-11-01T00:00:00.000+100",	// Timezone missing a digit
 		"2022-11-01T00:00:00.000-10:0",	// Timezone missing a digit
 		"2022-11-01T00:00:00.000-nope",	// Timezone wrong format

@@ -167,7 +167,7 @@ export class TransactionClient {
 		return size;
 	}
 
-	private reIsoDateFormat = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?(Z|(?:[+-])(?:\d{2}:\d{2}|\d{4}))?$/;
+	private reIsoDateFormat = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?(Z|(?:[+-])(?:\d{2}:\d{2}|\d{4}))?$/;
 	private jsonDateParser = (key:string, value:unknown):unknown => {
 		// based on logic from https://weblog.west-wind.com/posts/2014/jan/06/javascript-json-date-parsing-and-real-dates
 		if (typeof value === 'string') {
