@@ -310,6 +310,7 @@ describe("Utility functions", () => {
 		"2022-11-01T00:00:00.00",
 		"2022-11-01T00:00:00.00Z",
 		"2022-11-01T00:00:00.00-1000",
+		"2022-12-02T23:00:18.3062179Z",
 	])("should convert valid date strings to Date objects [%s]", (testDateString:string) => {
 		const client = new TransactionClient({
 			apiKey: "testauth",
