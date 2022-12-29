@@ -2,6 +2,7 @@ export interface ClientOptions {
 	apiKey: string;
 	baseUrl?: string | undefined;
 	debugOutput?: boolean;
+	requestHeaders?: Record<string, string>;
 }
 
 export enum SortOrder {
@@ -9,16 +10,18 @@ export enum SortOrder {
 	Descending = "desc",
 }
 
-export interface RequestOptions {
+export interface ClientRequestOptions {
 	listPropertyName?: string;
 	entityContainerPropertyName?: string;
 	prefixApiVersion?: boolean;
 	isTransactionResponse?: boolean;
+	headers?: Record<string, string>;
 }
 
-export const defaultRequestOptions:RequestOptions = {
+export const defaultRequestOptions:ClientRequestOptions = {
 	listPropertyName: undefined,
 	entityContainerPropertyName: undefined,
 	prefixApiVersion: true,
 	isTransactionResponse: true,
+	headers: undefined,
 };

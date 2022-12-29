@@ -84,6 +84,71 @@ describe("Client instantiation", () => {
 	});
 });
 
+describe("Client parameters", () => {
+	it("should include the client request headers", async () => {
+		const testClientRequestHeaders = {
+			"tx-key": "thekey",
+			"tx-thing": "thething",
+		};
+
+		const client = new FlexPayTransactionClient({
+			apiKey: "testauth",
+			baseUrl: "https://example.com",
+			requestHeaders: testClientRequestHeaders,
+		});
+
+		const fetchSpy = jest.spyOn(NodeFetch, 'default').mockResolvedValue({} as NodeFetch.Response);
+
+		try {
+			await client.transactions.getTransaction("test transactionId");
+		} catch (ex) {
+		}
+
+		expect(fetchSpy).toHaveBeenCalledWith(
+			expect.anything(),
+			expect.objectContaining({
+				headers: expect.objectContaining({
+					...testClientRequestHeaders,
+				}),
+			}),
+		);
+	});
+
+	it("should include the request headers", async () => {
+		const testClientRequestHeaders = {
+			"tx-key": "thekey",
+			"tx-thing": "thething",
+		};
+
+		const client = new FlexPayTransactionClient({
+			apiKey: "testauth",
+			baseUrl: "https://example.com",
+			requestHeaders: testClientRequestHeaders,
+		});
+
+		const fetchSpy = jest.spyOn(NodeFetch, 'default').mockResolvedValue({} as NodeFetch.Response);
+
+		const requestHeaders = {
+			"request": "header",
+		};
+
+		try {
+			await client.transactions.getTransaction("test transactionId", { headers: requestHeaders});
+		} catch (ex) {
+		}
+
+		expect(fetchSpy).toHaveBeenCalledWith(
+			expect.anything(),
+			expect.objectContaining({
+				headers: expect.objectContaining({
+					...testClientRequestHeaders,
+					...requestHeaders,
+				}),
+			}),
+		);
+	});
+});
+
 describe("Client error handling", () => {
 	it("should return a FetchError type", async () => {
 		const client = new FlexPayTransactionClient({

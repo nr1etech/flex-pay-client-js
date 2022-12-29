@@ -1,6 +1,6 @@
 import * as Errors from "./errors";
 import fetch, { Response } from "node-fetch";
-import { ClientOptions, RequestOptions, defaultRequestOptions } from "./client-types";
+import { ClientOptions, ClientRequestOptions, defaultRequestOptions } from "./client-types";
 
 const base64RE = /^[a-zA-Z0-9+/]+(==?)?$/;
 
@@ -9,6 +9,7 @@ export class TransactionClient {
 	private apiKey:string;
 	private apiVersion = "/v1";
 	private debugOutput = false;
+	private requestHeaders:Record<string, string>|undefined = undefined;
 
 	constructor(options:ClientOptions) {
 		if (options.baseUrl !== undefined) {
@@ -25,6 +26,7 @@ export class TransactionClient {
 
 		this.apiKey = options.apiKey;
 		this.debugOutput = options.debugOutput ?? false;
+		this.requestHeaders = options.requestHeaders;
 	}
 
 	private isValidApiKey(apiKey:string|undefined):boolean {
@@ -55,7 +57,7 @@ export class TransactionClient {
 	}
 
 	// If there is a network response with JSON then a tuple is returned (boolean success, object jsonContent). If any exceptions are thrown they are not handled by this method.
-	public async executeRequest<T>(uri:string, method:string, options?:RequestOptions, requestBody?:unknown, queryParameters?:Record<string, string|undefined>|undefined):Promise<T> {
+	public async executeRequest<T>(uri:string, method:string, options?:ClientRequestOptions, requestBody?:unknown, queryParameters?:Record<string, string|undefined>|undefined):Promise<T> {
 		options = Object.assign({}, defaultRequestOptions, options ?? {});	// supply default options
 
 		if (options.prefixApiVersion) {
@@ -92,6 +94,8 @@ export class TransactionClient {
 			response = await fetch(url, {
 				method,
 				headers: {
+					...this.requestHeaders,
+					...options.headers,
 					"Content-Type": "application/json",
 					"Authorization": `Basic ${this.apiKey}`,
 				},

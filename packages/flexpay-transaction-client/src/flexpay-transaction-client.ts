@@ -13,6 +13,10 @@ import {
 	RefundRequest, RefundResponse,
 } from ".";
 
+export interface RequestOptions {
+	headers?: Record<string, string>;
+}
+
 export class FlexPayTransactionClient {
 	public transactions:Transactions;
 	public paymentMethods:PaymentMethods;
@@ -52,19 +56,19 @@ class Transactions {
 		private client:TransactionClient
 	) { }
 
-	async getTransaction(transactionId:string):Promise<TransactionResponse> {
+	async getTransaction(transactionId:string, requestOptions?:RequestOptions):Promise<TransactionResponse> {
 		const uri = `/transactions/${encodeURIComponent(transactionId)}`;
 
-		return await this.client.executeRequest<TransactionResponse>(uri, "GET", { entityContainerPropertyName: "transaction" });
+		return await this.client.executeRequest<TransactionResponse>(uri, "GET", { entityContainerPropertyName: "transaction", headers: requestOptions?.headers });
 	}
 
-	async getTransactionByMerchantTransactionId(merchantTransactionId:string):Promise<TransactionResponse> {
+	async getTransactionByMerchantTransactionId(merchantTransactionId:string, requestOptions?:RequestOptions):Promise<TransactionResponse> {
 		const uri = `/transactions/byMerchantTransactionId/${encodeURIComponent(merchantTransactionId)}`;
 
-		return await this.client.executeRequest<TransactionResponse>(uri, "GET", { entityContainerPropertyName: "transaction" });
+		return await this.client.executeRequest<TransactionResponse>(uri, "GET", { entityContainerPropertyName: "transaction", headers: requestOptions?.headers });
 	}
 
-	async getTransactionList(pageId:string|null = null, pageSize:number = 20, sortOrder:SortOrder = SortOrder.Ascending):Promise<TransactionListItemResponse[]> {
+	async getTransactionList(pageId:string|null = null, pageSize:number = 20, sortOrder:SortOrder = SortOrder.Ascending, requestOptions?:RequestOptions):Promise<TransactionListItemResponse[]> {
 		const uri = "/transactions";
 
 		pageSize = this.client.constrainPageSize(pageSize);
@@ -74,9 +78,9 @@ class Transactions {
 			"count": pageSize.toString(),
 			"sinceToken": pageId ?? undefined,
 		};
-		const requestOptions = { listPropertyName: "transactions", entityContainerPropertyName: undefined };
+		const clientRequestOptions = { listPropertyName: "transactions", entityContainerPropertyName: undefined, headers: requestOptions?.headers };
 
-		return await this.client.executeRequest<TransactionListItemResponse[]>(uri, "GET", requestOptions, undefined, queryParameters);
+		return await this.client.executeRequest<TransactionListItemResponse[]>(uri, "GET", clientRequestOptions, undefined, queryParameters);
 	}
 }
 
@@ -85,27 +89,27 @@ class PaymentMethods {
 		private client:TransactionClient
 	) { }
 
-	async tokenizeCreditCard(creditCardPaymentMethod:TokenizeCreditCardPaymentMethodRequest):Promise<TokenizeCreditCardPaymentMethodResponse> {
+	async tokenizeCreditCard(creditCardPaymentMethod:TokenizeCreditCardPaymentMethodRequest, requestOptions?:RequestOptions):Promise<TokenizeCreditCardPaymentMethodResponse> {
 		const uri = "/paymentmethods";
 
 		const request = {
 			"paymentMethod": creditCardPaymentMethod,
 		};
 
-		return await this.client.executeRequest<TokenizeCreditCardPaymentMethodResponse>(uri, "POST", { entityContainerPropertyName: "transaction" }, request);
+		return await this.client.executeRequest<TokenizeCreditCardPaymentMethodResponse>(uri, "POST", { entityContainerPropertyName: "transaction", headers: requestOptions?.headers }, request);
 	}
 
-	async tokenizeGatewayPaymentMethod(tokenizedPaymentMethod:TokenizeGatewayPaymentMethodRequest):Promise<TokenizeGatewayPaymentMethodResponse> {
+	async tokenizeGatewayPaymentMethod(tokenizedPaymentMethod:TokenizeGatewayPaymentMethodRequest, requestOptions?:RequestOptions):Promise<TokenizeGatewayPaymentMethodResponse> {
 		const uri = "/paymentmethods";
 
 		const request = {
 			"paymentMethod": tokenizedPaymentMethod,
 		};
 
-		return await this.client.executeRequest<TokenizeGatewayPaymentMethodResponse>(uri, "POST", { entityContainerPropertyName: "transaction" }, request);
+		return await this.client.executeRequest<TokenizeGatewayPaymentMethodResponse>(uri, "POST", { entityContainerPropertyName: "transaction", headers: requestOptions?.headers }, request);
 	}
 
-	async getPaymentMethodList(pageId:string|null = null, pageSize:number = 20, sortOrder:SortOrder = SortOrder.Ascending):Promise<PaymentMethodListItem[]> {
+	async getPaymentMethodList(pageId:string|null = null, pageSize:number = 20, sortOrder:SortOrder = SortOrder.Ascending, requestOptions?:RequestOptions):Promise<PaymentMethodListItem[]> {
 		const uri = "/paymentmethods";
 
 		pageSize = this.client.constrainPageSize(pageSize);
@@ -115,34 +119,34 @@ class PaymentMethods {
 			"count": pageSize.toString(),
 			"sinceToken": pageId ?? undefined,
 		};
-		const requestOptions = { listPropertyName: "paymentMethods", entityContainerPropertyName: "paymentMethod" };
+		const clientRequestOptions = { listPropertyName: "paymentMethods", entityContainerPropertyName: "paymentMethod", headers: requestOptions?.headers };
 
-		return await this.client.executeRequest<PaymentMethodListItem[]>(uri, "GET", requestOptions, undefined, queryParameters);
+		return await this.client.executeRequest<PaymentMethodListItem[]>(uri, "GET", clientRequestOptions, undefined, queryParameters);
 	}
 
-	async getPaymentMethod(paymentMethodId:string):Promise<PaymentMethodResponse> {
+	async getPaymentMethod(paymentMethodId:string, requestOptions?:RequestOptions):Promise<PaymentMethodResponse> {
 		const uri = `/paymentmethods/${encodeURIComponent(paymentMethodId)}`;
 
-		return await this.client.executeRequest<PaymentMethodResponse>(uri, "GET", { entityContainerPropertyName: "paymentMethod" });
+		return await this.client.executeRequest<PaymentMethodResponse>(uri, "GET", { entityContainerPropertyName: "paymentMethod", headers: requestOptions?.headers });
 	}
 
-	async updatePaymentMethod(paymentMethodId:string, updatePaymentMethodRequest:UpdatePaymentMethodRequest):Promise<UpdatePaymentMethodResponse> {
+	async updatePaymentMethod(paymentMethodId:string, updatePaymentMethodRequest:UpdatePaymentMethodRequest, requestOptions?:RequestOptions):Promise<UpdatePaymentMethodResponse> {
 		const uri = `/paymentmethods/${encodeURIComponent(paymentMethodId)}`;
 
 		const request = {
 			"paymentMethod": updatePaymentMethodRequest,
 		};
 
-		return await this.client.executeRequest<UpdatePaymentMethodResponse>(uri, "PUT", { entityContainerPropertyName: "transaction" }, request);
+		return await this.client.executeRequest<UpdatePaymentMethodResponse>(uri, "PUT", { entityContainerPropertyName: "transaction", headers: requestOptions?.headers }, request);
 	}
 
-	async redactPaymentMethod(paymentMethodId:string):Promise<RedactPaymentMethodResponse> {
+	async redactPaymentMethod(paymentMethodId:string, requestOptions?:RequestOptions):Promise<RedactPaymentMethodResponse> {
 		const uri = `/paymentmethods/${encodeURIComponent(paymentMethodId)}/redact`;
 
-		return await this.client.executeRequest<RedactPaymentMethodResponse>(uri, "PUT", { entityContainerPropertyName: "transaction" });
+		return await this.client.executeRequest<RedactPaymentMethodResponse>(uri, "PUT", { entityContainerPropertyName: "transaction", headers: requestOptions?.headers });
 	}
 
-	async recacheCvv(paymentMethodId:string, cvv:string):Promise<RecachePaymentMethodResponse> {
+	async recacheCvv(paymentMethodId:string, cvv:string, requestOptions?:RequestOptions):Promise<RecachePaymentMethodResponse> {
 		const uri = `/paymentmethods/${encodeURIComponent(paymentMethodId)}/recache`;
 
 		const request:RecachePaymentMethodRequest = {
@@ -153,7 +157,7 @@ class PaymentMethods {
 			},
 		};
 
-		return await this.client.executeRequest<RecachePaymentMethodResponse>(uri, "PUT", { entityContainerPropertyName: "transaction" }, request);
+		return await this.client.executeRequest<RecachePaymentMethodResponse>(uri, "PUT", { entityContainerPropertyName: "transaction", headers: requestOptions?.headers }, request);
 	}
 }
 
@@ -163,36 +167,36 @@ class Charge {
 	) { }
 
 	// Charges a credit card directly from passed in card information
-	async chargeCreditCard(creditCardCharge:ChargeCreditCardRequest):Promise<ChargeCreditCardResponse> {
+	async chargeCreditCard(creditCardCharge:ChargeCreditCardRequest, requestOptions?:RequestOptions):Promise<ChargeCreditCardResponse> {
 		const uri = "/gateways/charge";
 
 		const request = {
 			"transaction": creditCardCharge,
 		};
 
-		return await this.client.executeRequest<ChargeCreditCardResponse>(uri, "POST", { entityContainerPropertyName: "transaction" }, request);
+		return await this.client.executeRequest<ChargeCreditCardResponse>(uri, "POST", { entityContainerPropertyName: "transaction", headers: requestOptions?.headers }, request);
 	}
 
 	// Charges a gateway stored payment method directly from passed in gateway payment method info
-	async chargeGatewayPaymentMethod(gatewayPaymentMethodCharge:ChargeGatewayPaymentMethodRequest):Promise<ChargeGatewayPaymentMethodResponse> {
+	async chargeGatewayPaymentMethod(gatewayPaymentMethodCharge:ChargeGatewayPaymentMethodRequest, requestOptions?:RequestOptions):Promise<ChargeGatewayPaymentMethodResponse> {
 		const uri = "/gateways/charge";
 
 		const request = {
 			"transaction": gatewayPaymentMethodCharge,
 		};
 
-		return await this.client.executeRequest<ChargeGatewayPaymentMethodResponse>(uri, "POST", { entityContainerPropertyName: "transaction" }, request);
+		return await this.client.executeRequest<ChargeGatewayPaymentMethodResponse>(uri, "POST", { entityContainerPropertyName: "transaction", headers: requestOptions?.headers }, request);
 	}
 
 	// Charges a previously tokenized payment method (either credit card or gateway) from the passed in payment method id
-	async chargeTokenizedPaymentMethod(tokenizedPaymentMethodCharge:ChargeTokenizedPaymentMethodRequest):Promise<ChargeTokenizedPaymentMethodResponse> {
+	async chargeTokenizedPaymentMethod(tokenizedPaymentMethodCharge:ChargeTokenizedPaymentMethodRequest, requestOptions?:RequestOptions):Promise<ChargeTokenizedPaymentMethodResponse> {
 		const uri = "/gateways/charge";
 
 		const request = {
 			"transaction": tokenizedPaymentMethodCharge,
 		};
 
-		return await this.client.executeRequest<ChargeTokenizedPaymentMethodResponse>(uri, "POST", { entityContainerPropertyName: "transaction" }, request);
+		return await this.client.executeRequest<ChargeTokenizedPaymentMethodResponse>(uri, "POST", { entityContainerPropertyName: "transaction", headers: requestOptions?.headers }, request);
 	}
 }
 
@@ -202,36 +206,36 @@ class Authorize {
 	) { }
 
 	// Auths a credit card directly from passed in card information
-	async authorizeCreditCard(creditCardCharge:AuthorizeCreditCardRequest):Promise<AuthorizeCreditCardResponse> {
+	async authorizeCreditCard(creditCardCharge:AuthorizeCreditCardRequest, requestOptions?:RequestOptions):Promise<AuthorizeCreditCardResponse> {
 		const uri = "/gateways/authorize";
 
 		const request = {
 			"transaction": creditCardCharge,
 		};
 
-		return await this.client.executeRequest<AuthorizeCreditCardResponse>(uri, "POST", { entityContainerPropertyName: "transaction" }, request);
+		return await this.client.executeRequest<AuthorizeCreditCardResponse>(uri, "POST", { entityContainerPropertyName: "transaction", headers: requestOptions?.headers }, request);
 	}
 
 	// Auths a gateway stored payment method directly from passed in gateway payment method info
-	async authorizeGatewayPaymentMethod(gatewayPaymentMethodCharge:AuthorizeGatewayPaymentMethodRequest):Promise<AuthorizeGatewayPaymentMethodResponse> {
+	async authorizeGatewayPaymentMethod(gatewayPaymentMethodCharge:AuthorizeGatewayPaymentMethodRequest, requestOptions?:RequestOptions):Promise<AuthorizeGatewayPaymentMethodResponse> {
 		const uri = "/gateways/authorize";
 
 		const request = {
 			"transaction": gatewayPaymentMethodCharge,
 		};
 
-		return await this.client.executeRequest<AuthorizeGatewayPaymentMethodResponse>(uri, "POST", { entityContainerPropertyName: "transaction" }, request);
+		return await this.client.executeRequest<AuthorizeGatewayPaymentMethodResponse>(uri, "POST", { entityContainerPropertyName: "transaction", headers: requestOptions?.headers }, request);
 	}
 
 	// Auths a previously tokenized payment method (either credit card or gateway) from the passed in payment method id
-	async authorizeTokenizedPaymentMethod(tokenizedPaymentMethodCharge:AuthorizeTokenizedPaymentMethodRequest):Promise<AuthorizeTokenizedPaymentMethodResponse> {
+	async authorizeTokenizedPaymentMethod(tokenizedPaymentMethodCharge:AuthorizeTokenizedPaymentMethodRequest, requestOptions?:RequestOptions):Promise<AuthorizeTokenizedPaymentMethodResponse> {
 		const uri = "/gateways/authorize";
 
 		const request = {
 			"transaction": tokenizedPaymentMethodCharge,
 		};
 
-		return await this.client.executeRequest<AuthorizeTokenizedPaymentMethodResponse>(uri, "POST", { entityContainerPropertyName: "transaction" }, request);
+		return await this.client.executeRequest<AuthorizeTokenizedPaymentMethodResponse>(uri, "POST", { entityContainerPropertyName: "transaction", headers: requestOptions?.headers }, request);
 	}
 
 }
@@ -241,14 +245,14 @@ class Capture {
 		private client:TransactionClient
 	) { }
 
-	async capture(transactionId:string, capture:CaptureRequest):Promise<CaptureResponse> {
+	async capture(transactionId:string, capture:CaptureRequest, requestOptions?:RequestOptions):Promise<CaptureResponse> {
 		const uri = `/transactions/${encodeURIComponent(transactionId)}/capture`;
 
 		const request = {
 			"transaction": capture,
 		};
 
-		return await this.client.executeRequest<CaptureResponse>(uri, "POST", { entityContainerPropertyName: "transaction" }, request);
+		return await this.client.executeRequest<CaptureResponse>(uri, "POST", { entityContainerPropertyName: "transaction", headers: requestOptions?.headers }, request);
 	}
 }
 
@@ -257,14 +261,14 @@ class Void {
 		private client:TransactionClient
 	) { }
 
-	async void(transactionId:string, capture:VoidRequest):Promise<VoidResponse> {
+	async void(transactionId:string, capture:VoidRequest, requestOptions?:RequestOptions):Promise<VoidResponse> {
 		const uri = `/transactions/${encodeURIComponent(transactionId)}/void`;
 
 		const request = {
 			"transaction": capture,
 		};
 
-		return await this.client.executeRequest<VoidResponse>(uri, "POST", { entityContainerPropertyName: "transaction" }, request);
+		return await this.client.executeRequest<VoidResponse>(uri, "POST", { entityContainerPropertyName: "transaction", headers: requestOptions?.headers }, request);
 	}
 }
 
@@ -273,14 +277,14 @@ class Refund {
 		private client:TransactionClient
 	) { }
 
-	async refund(transactionId:string, refund:RefundRequest):Promise<RefundResponse> {
+	async refund(transactionId:string, refund:RefundRequest, requestOptions?:RequestOptions):Promise<RefundResponse> {
 		const uri = `/transactions/${encodeURIComponent(transactionId)}/refund`;
 
 		const request = {
 			"transaction": refund,
 		};
 
-		return await this.client.executeRequest<RefundResponse>(uri, "POST", { entityContainerPropertyName: "transaction" }, request);
+		return await this.client.executeRequest<RefundResponse>(uri, "POST", { entityContainerPropertyName: "transaction", headers: requestOptions?.headers }, request);
 	}
 }
 
@@ -289,12 +293,13 @@ class HealthCheck {
 		private client:TransactionClient
 	) { }
 
-	async healthCheck():Promise<boolean> {
+	async healthCheck(requestOptions?:RequestOptions):Promise<boolean> {
 		const uri = "/api/test";
 
 		const response = await this.client.executeRequest<HealthCheckResponse>(uri, "GET", {
 			prefixApiVersion: false,
 			isTransactionResponse: false,
+			headers: requestOptions?.headers,
 		});
 
 		return response.message === "Your client successfully connects with FlexPay!";
