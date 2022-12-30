@@ -1,4 +1,4 @@
-import { FlexPayTransactionClient, ClientOptions, FetchError, AuthorizationError, ResponseError, TransactionClient } from "../../src";
+import { FlexPayTransactionClient, ClientOptions, FetchError, AuthorizationError, ResponseError, TransactionClient, ChargeCreditCardRequest } from "../../src";
 import * as NodeFetch from "node-fetch";
 
 beforeEach(() => {
@@ -85,65 +85,84 @@ describe("Client instantiation", () => {
 });
 
 describe("Client parameters", () => {
-	it("should include the client request headers", async () => {
-		const testClientRequestHeaders = {
-			"tx-key": "thekey",
-			"tx-thing": "thething",
-		};
-
+	it("should apply TokenEx settings", async () => {
 		const client = new FlexPayTransactionClient({
 			apiKey: "testauth",
 			baseUrl: "https://example.com",
-			requestHeaders: testClientRequestHeaders,
+			tokenEx: {
+				apiUrl: "https://tokenex.example.com",
+				tokenExID : "test-id",
+				apiKey: "test-api-key",
+			}
 		});
 
 		const fetchSpy = jest.spyOn(NodeFetch, 'default').mockResolvedValue({} as NodeFetch.Response);
 
 		try {
-			await client.transactions.getTransaction("test transactionId");
-		} catch (ex) {
-		}
+			await client.charge.chargeCreditCard({ } as ChargeCreditCardRequest);
+		} catch (ex) { }
 
 		expect(fetchSpy).toHaveBeenCalledWith(
-			expect.anything(),
+			"https://tokenex.example.com",
 			expect.objectContaining({
 				headers: expect.objectContaining({
-					...testClientRequestHeaders,
+					"tx-tokenex-id": "test-id",
+					"tx-apikey": "test-api-key",
+					"tx-url": expect.stringContaining("https://example.com"),
 				}),
 			}),
 		);
 	});
 
-	it("should include the request headers", async () => {
-		const testClientRequestHeaders = {
-			"tx-key": "thekey",
-			"tx-thing": "thething",
-		};
-
+	it("should not apply TokenEx settings", async () => {
 		const client = new FlexPayTransactionClient({
 			apiKey: "testauth",
 			baseUrl: "https://example.com",
-			requestHeaders: testClientRequestHeaders,
+			tokenEx: {
+				apiUrl: "https://tokenex.example.com",
+				tokenExID : "test-id",
+				apiKey: "test-api-key",
+			}
 		});
 
 		const fetchSpy = jest.spyOn(NodeFetch, 'default').mockResolvedValue({} as NodeFetch.Response);
 
-		const requestHeaders = {
-			"request": "header",
-		};
-
 		try {
-			await client.transactions.getTransaction("test transactionId", { headers: requestHeaders});
-		} catch (ex) {
-		}
+			await client.transactions.getTransaction("test");
+		} catch (ex) { }
 
 		expect(fetchSpy).toHaveBeenCalledWith(
-			expect.anything(),
+			expect.stringContaining("https://example.com"),
 			expect.objectContaining({
-				headers: expect.objectContaining({
-					...testClientRequestHeaders,
-					...requestHeaders,
-				}),
+				headers: {
+					"Authorization": expect.any(String),
+					"Content-Type": "application/json",
+				},
+			}),
+		);
+	});
+
+	it("should not apply TokenEx settings when no settings are configured", async () => {
+		const client = new FlexPayTransactionClient({
+			apiKey: "testauth",
+			baseUrl: "https://example.com",
+		});
+
+		const fetchSpy = jest.spyOn(NodeFetch, 'default').mockResolvedValue({} as NodeFetch.Response);
+
+		try {
+			await client.charge.chargeCreditCard({ } as ChargeCreditCardRequest);
+		} catch (ex) { }
+
+		expect(fetchSpy).toHaveBeenCalledTimes(1);
+
+		expect(fetchSpy).toHaveBeenCalledWith(
+			expect.stringContaining("https://example.com"),
+			expect.objectContaining({
+				headers: {
+					"Authorization": expect.any(String),
+					"Content-Type": "application/json",
+				},
 			}),
 		);
 	});

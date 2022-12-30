@@ -2,7 +2,7 @@ export interface ClientOptions {
 	apiKey: string;
 	baseUrl?: string | undefined;
 	debugOutput?: boolean;
-	requestHeaders?: Record<string, string>;
+	tokenEx?: TokenExClientOptions;
 }
 
 export enum SortOrder {
@@ -10,18 +10,22 @@ export enum SortOrder {
 	Descending = "desc",
 }
 
-export interface ClientRequestOptions {
+export interface TokenExClientOptions {
+	apiUrl: string;
+	tokenExID: string;
+	apiKey: string;
+}
+
+export interface RequestOptions {
 	listPropertyName?: string;
 	entityContainerPropertyName?: string;
 	prefixApiVersion?: boolean;
 	isTransactionResponse?: boolean;
-	headers?: Record<string, string>;
 }
 
-export const defaultRequestOptions:ClientRequestOptions = {
+export const defaultRequestOptions:RequestOptions = {
 	listPropertyName: undefined,
 	entityContainerPropertyName: undefined,
 	prefixApiVersion: true,
 	isTransactionResponse: true,
-	headers: undefined,
 };

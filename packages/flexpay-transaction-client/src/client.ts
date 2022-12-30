@@ -1,6 +1,6 @@
 import * as Errors from "./errors";
 import fetch, { Response } from "node-fetch";
-import { ClientOptions, ClientRequestOptions, defaultRequestOptions } from "./client-types";
+import { ClientOptions, RequestOptions, defaultRequestOptions, TokenExClientOptions } from "./client-types";
 
 const base64RE = /^[a-zA-Z0-9+/]+(==?)?$/;
 
@@ -9,7 +9,7 @@ export class TransactionClient {
 	private apiKey:string;
 	private apiVersion = "/v1";
 	private debugOutput = false;
-	private requestHeaders:Record<string, string>|undefined = undefined;
+	private tokenExConfig:TokenExClientOptions|undefined;
 
 	constructor(options:ClientOptions) {
 		if (options.baseUrl !== undefined) {
@@ -26,7 +26,7 @@ export class TransactionClient {
 
 		this.apiKey = options.apiKey;
 		this.debugOutput = options.debugOutput ?? false;
-		this.requestHeaders = options.requestHeaders;
+		this.tokenExConfig = options.tokenEx;
 	}
 
 	private isValidApiKey(apiKey:string|undefined):boolean {
@@ -56,8 +56,16 @@ export class TransactionClient {
 		}
 	}
 
+	public async executeDirectRequest<T>(uri:string, method:string, options?:RequestOptions, requestBody?:unknown, queryParameters?:Record<string, string|undefined>|undefined):Promise<T> {
+		return await this.executeRequest(false, uri, method, options, requestBody, queryParameters);
+	}
+
+	public async executeProxyRequest<T>(uri:string, method:string, options?:RequestOptions, requestBody?:unknown, queryParameters?:Record<string, string|undefined>|undefined):Promise<T> {
+		return await this.executeRequest(true, uri, method, options, requestBody, queryParameters);
+	}
+
 	// If there is a network response with JSON then a tuple is returned (boolean success, object jsonContent). If any exceptions are thrown they are not handled by this method.
-	public async executeRequest<T>(uri:string, method:string, options?:ClientRequestOptions, requestBody?:unknown, queryParameters?:Record<string, string|undefined>|undefined):Promise<T> {
+	private async executeRequest<T>(withTGAPI:boolean, uri:string, method:string, options?:RequestOptions, requestBody?:unknown, queryParameters?:Record<string, string|undefined>|undefined):Promise<T> {
 		options = Object.assign({}, defaultRequestOptions, options ?? {});	// supply default options
 
 		if (options.prefixApiVersion) {
@@ -88,19 +96,27 @@ export class TransactionClient {
 		let response:Response|undefined;
 
 		try {
-			const url = this.baseUrl + uri + qp
+			let url = this.baseUrl + uri + qp
 			this.debugOutput && console.debug("Request URL:", url);
+
+			const headers:Record<string, string> = {
+				"Content-Type": "application/json",
+				"Authorization": `Basic ${this.apiKey}`,
+			};
+
+			if (withTGAPI && this.tokenExConfig) {
+				headers["tx-url"] = url;
+				headers["tx-tokenex-id"] = this.tokenExConfig.tokenExID;
+				headers["tx-apikey"] = this.tokenExConfig.apiKey;
+				url = this.tokenExConfig.apiUrl;
+			}
 
 			response = await fetch(url, {
 				method,
-				headers: {
-					...this.requestHeaders,
-					...options.headers,
-					"Content-Type": "application/json",
-					"Authorization": `Basic ${this.apiKey}`,
-				},
+				headers,
 				body: requestData,
 			});
+
 			responseBodyText = await response.text();
 		} catch (ex) {
 			throw new Errors.FetchError((ex as Error).message, { cause: ex });
