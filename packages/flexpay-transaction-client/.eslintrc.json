@@ -22,6 +22,7 @@
 	"rules": {
 		"@typescript-eslint/no-empty-interface": "off",
 		"@typescript-eslint/no-unused-vars": ["error", { "args": "none" }],	// Some interface function implementations don't use all the parameters, and that's ok
-		"@typescript-eslint/no-inferrable-types": ["error", { "ignoreParameters": true, "ignoreProperties": true }]	// some times I like to explicitly give the type
+		"@typescript-eslint/no-inferrable-types": ["error", { "ignoreParameters": true, "ignoreProperties": true }],	// some times I like to explicitly give the type
+		"@typescript-eslint/no-unsafe-declaration-merging": "off" // we do this to create better customer error objects
 	}
 }
