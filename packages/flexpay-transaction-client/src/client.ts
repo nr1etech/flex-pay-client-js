@@ -1,6 +1,6 @@
 import * as Errors from "./errors";
-import fetch, { Response } from "node-fetch";
-import { ClientOptions, RequestOptions, defaultRequestOptions, TokenExClientOptions } from "./client-types";
+import fetch, { Response, Headers } from "node-fetch";
+import { ClientOptions, RequestOptions, defaultRequestOptions, TokenExClientOptions, TOKEN_EX_HEADER } from "./client-types";
 
 const base64RE = /^[a-zA-Z0-9+/]+(==?)?$/;
 
@@ -72,6 +72,8 @@ export class TransactionClient {
 			uri = this.apiVersion + uri;
 		}
 
+		const useTokenEx = this.tokenExConfig != undefined && withTGAPI;
+
 		let qp = "";
 		if (queryParameters) {
 			const cleanedQP = {} as Record<string, string>;
@@ -99,16 +101,17 @@ export class TransactionClient {
 			let url = this.baseUrl + uri + qp
 			this.debugOutput && console.debug("Request URL:", url);
 
-			const headers:Record<string, string> = {
-				"Content-Type": "application/json",
-				"Authorization": `Basic ${this.apiKey}`,
-			};
+			const headers = new Headers();
+			headers.append("Content-Type", "application/json");
+			headers.append("Authorization", `Basic ${this.apiKey}`);
 
-			if (withTGAPI && this.tokenExConfig) {
-				headers["tx-url"] = url;
-				headers["tx-tokenex-id"] = this.tokenExConfig.tokenExID;
-				headers["tx-apikey"] = this.tokenExConfig.apiKey;
+			if (useTokenEx && this.tokenExConfig) {	// Note: extra condition to make TypeScript happy
+				headers.append(TOKEN_EX_HEADER.URL, url);
+				headers.append(TOKEN_EX_HEADER.TokenExID, this.tokenExConfig.tokenExID);
+				headers.append(TOKEN_EX_HEADER.ApiKey, this.tokenExConfig.apiKey);
 				url = this.tokenExConfig.apiUrl;
+
+				this.debugOutput && console.debug("Request configured for TokenEx Transparent Gateway API.", `Header[${TOKEN_EX_HEADER.URL}]: ${headers.get(TOKEN_EX_HEADER.URL) ?? ""}`, `URL: ${url}`);
 			}
 
 			response = await fetch(url, {
@@ -123,6 +126,15 @@ export class TransactionClient {
 		}
 
 		this.debugOutput && console.debug("STATUS:", response.status);
+
+		if (this.debugOutput && useTokenEx) {
+			response.headers.forEach((value:string, name:string) => {
+				if (name.toLowerCase().startsWith("tx-") || name.toLowerCase().startsWith("tx_")) {
+					console.debug(`Response header[${name}]:`, value);
+				}
+			});
+		}
+
 		this.debugOutput && console.debug("RESPONSE BODY:", responseBodyText);
 
 		if (response.status === 401 || response.status === 403) {	// AWS HTTP API Gateway returns 403 from the authorizer (instead of 401) if the credentials are invalid
