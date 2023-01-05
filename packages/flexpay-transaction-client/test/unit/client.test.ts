@@ -1,4 +1,4 @@
-import { FlexPayTransactionClient, ClientOptions, FetchError, AuthorizationError, ResponseError, TransactionClient, ChargeCreditCardRequest } from "../../src";
+import { FlexPayTransactionClient, ClientOptions, FetchError, AuthorizationError, ResponseError, TransactionClient, ChargeCreditCardRequest, TOKEN_EX_HEADER } from "../../src";
 import * as NodeFetch from "node-fetch";
 
 beforeEach(() => {
@@ -85,6 +85,26 @@ describe("Client instantiation", () => {
 });
 
 describe("Client parameters", () => {
+	const buildHeaderMatcher = (matchHeaders:Record<string, any>) => {
+		return {
+			asymmetricMatch: function (headers:NodeFetch.Headers):boolean {
+				for (const [name, value] of Object.entries(matchHeaders)) {
+					if (!headers.has(name)) {
+						return false;
+					}
+
+					if (value.asymmetricMatch) {
+						return value.asymmetricMatch(headers.get(name));
+					} else if (headers.get(name) !== value) {
+						return false;
+					}
+				}
+
+				return true;
+			}
+		};
+	}
+
 	it("should apply TokenEx settings", async () => {
 		const client = new FlexPayTransactionClient({
 			apiKey: "testauth",
@@ -105,10 +125,10 @@ describe("Client parameters", () => {
 		expect(fetchSpy).toHaveBeenCalledWith(
 			"https://tokenex.example.com",
 			expect.objectContaining({
-				headers: expect.objectContaining({
-					"tx-tokenex-id": "test-id",
-					"tx-apikey": "test-api-key",
-					"tx-url": expect.stringContaining("https://example.com"),
+				headers: buildHeaderMatcher({
+					[TOKEN_EX_HEADER.TokenExID]: "test-id",
+					[TOKEN_EX_HEADER.ApiKey]: "test-api-key",
+					[TOKEN_EX_HEADER.URL]: expect.stringContaining("https://example.com"),
 				}),
 			}),
 		);
@@ -134,10 +154,10 @@ describe("Client parameters", () => {
 		expect(fetchSpy).toHaveBeenCalledWith(
 			expect.stringContaining("https://example.com"),
 			expect.objectContaining({
-				headers: {
+				headers: buildHeaderMatcher({
 					"Authorization": expect.any(String),
 					"Content-Type": "application/json",
-				},
+				}),
 			}),
 		);
 	});
@@ -159,10 +179,10 @@ describe("Client parameters", () => {
 		expect(fetchSpy).toHaveBeenCalledWith(
 			expect.stringContaining("https://example.com"),
 			expect.objectContaining({
-				headers: {
+				headers: buildHeaderMatcher({
 					"Authorization": expect.any(String),
 					"Content-Type": "application/json",
-				},
+				}),
 			}),
 		);
 	});
