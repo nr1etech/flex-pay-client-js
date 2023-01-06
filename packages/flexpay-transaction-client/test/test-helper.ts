@@ -160,7 +160,7 @@ export const EmptyObjectBuilder = {
 			email: null,
 			phoneNumber: null,
 			paymentMethodType: null,
-			fingerprint: null,
+			fingerprint: expect.any(String),
 			lastFourDigits: null,
 			firstSixDigits: null,
 			cardType: null,
