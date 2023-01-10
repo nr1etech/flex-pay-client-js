@@ -15,14 +15,14 @@ export class TransactionClient {
 		if (options.baseUrl !== undefined) {
 			const baseUrl = options.baseUrl.endsWith("/") ? options.baseUrl.slice(0, -1) : options.baseUrl;	// remove trailing slash
 
-			if (!this.isUrl(baseUrl)) throw new Errors.ArgumentError("baseUrl is invalid.");
+			if (!this.isUrl(baseUrl)) throw new Errors.ArgumentError(new Error("baseUrl is invalid."));
 
 			this.baseUrl = baseUrl;
 		} else {
 			this.baseUrl = "https://api.flexpay.io";
 		}
 
-		if (!this.isValidApiKey(options.apiKey)) throw new Errors.ArgumentError("apiKey is invalid");
+		if (!this.isValidApiKey(options.apiKey)) throw new Errors.ArgumentError(new Error("apiKey is invalid"));
 
 		this.apiKey = options.apiKey;
 		this.debugOutput = options.debugOutput ?? false;
@@ -52,7 +52,7 @@ export class TransactionClient {
 		if (this.isValidApiKey(apiKey)) {
 			this.apiKey = apiKey;
 		} else {
-			throw new Errors.ArgumentError("Invalid API Key");
+			throw new Errors.ArgumentError(new Error("Invalid API Key"));
 		}
 	}
 
@@ -122,7 +122,7 @@ export class TransactionClient {
 
 			responseBodyText = await response.text();
 		} catch (ex) {
-			throw new Errors.FetchError((ex as Error).message, { cause: ex });
+			throw new Errors.FetchError(ex as Error, { cause: ex });
 		}
 
 		this.debugOutput && console.debug("STATUS:", response.status);
@@ -138,22 +138,22 @@ export class TransactionClient {
 		this.debugOutput && console.debug("RESPONSE BODY:", responseBodyText);
 
 		if (response.status === 401 || response.status === 403) {	// AWS HTTP API Gateway returns 403 from the authorizer (instead of 401) if the credentials are invalid
-			throw new Errors.AuthorizationError("Authorization Failed");
+			throw new Errors.AuthorizationError(new Error("Authorization Failed"));
 		} else if (response.status === 404) {
-			throw new Errors.ResponseError("Resource not found");
+			throw new Errors.ResponseError(new Error("Resource not found"));
 		}
 
 		if (response.status != 200) {
-			throw new Errors.ResponseError(responseBodyText);
+			throw new Errors.ResponseError(new Error(responseBodyText));
 		}
 
 		try {
 			responseJson = responseBodyText && JSON.parse(responseBodyText, this.jsonDateParser);
 		} catch (ex) {
-			throw new Errors.ResponseError("Invalid response content", { cause: responseBodyText});
+			throw new Errors.ResponseError(new Error("Invalid response content"), { cause: responseBodyText});
 		}
 
-		if (responseJson === undefined) throw new Errors.ResponseError("Invalid response content", { cause: { responseStatus: response.status, responseBody: "" } });
+		if (responseJson === undefined) throw new Errors.ResponseError(new Error("Invalid response content"), { cause: { responseStatus: response.status, responseBody: "" } });
 
 		return this.processResponse(responseJson, options.entityContainerPropertyName, options.listPropertyName);
 	}
