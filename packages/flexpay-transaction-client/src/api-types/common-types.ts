@@ -172,6 +172,8 @@ export interface BaseTransactionResponse {
 	retryCount: number;
 	dateFirstAttempt: Date | null;
 	description: string | null;
+	productSku: string | null;
+	subscriptionId: string | null;
 	customerIp: string | null;
 	shippingAddress: AddressResponse;
 	referenceData: string;

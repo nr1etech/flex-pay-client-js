@@ -45,6 +45,7 @@ export enum GatewayType {
 	ePay = "epay",	// Not listed in Gateway Management API docs
 	FirstDataGlobalGateway = "global",
 	FlexPayDeclined = "flexpay_declined",	// Not listed in Gateway Management API docs
+	FlexPaySandbox = "flexpay_sandbox",
 	Forte = "forte",
 	GlobalGatewaye4 = "global_gateway_e4",	// Not listed in Gateway Management API docs
 	//GlobalCollect = "global_collect",	// Not listed in Gateway Management API docs

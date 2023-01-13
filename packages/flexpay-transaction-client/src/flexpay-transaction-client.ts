@@ -202,33 +202,33 @@ class Authorize {
 	) { }
 
 	// Auths a credit card directly from passed in card information
-	async authorizeCreditCard(creditCardCharge:AuthorizeCreditCardRequest):Promise<AuthorizeCreditCardResponse> {
+	async authorizeCreditCard(creditCardAuth:AuthorizeCreditCardRequest):Promise<AuthorizeCreditCardResponse> {
 		const uri = "/gateways/authorize";
 
 		const request = {
-			"transaction": creditCardCharge,
+			"transaction": creditCardAuth,
 		};
 
 		return await this.client.executeProxyRequest<AuthorizeCreditCardResponse>(uri, "POST", { entityContainerPropertyName: "transaction" }, request);
 	}
 
 	// Auths a gateway stored payment method directly from passed in gateway payment method info
-	async authorizeGatewayPaymentMethod(gatewayPaymentMethodCharge:AuthorizeGatewayPaymentMethodRequest):Promise<AuthorizeGatewayPaymentMethodResponse> {
+	async authorizeGatewayPaymentMethod(gatewayPaymentMethodAuth:AuthorizeGatewayPaymentMethodRequest):Promise<AuthorizeGatewayPaymentMethodResponse> {
 		const uri = "/gateways/authorize";
 
 		const request = {
-			"transaction": gatewayPaymentMethodCharge,
+			"transaction": gatewayPaymentMethodAuth,
 		};
 
 		return await this.client.executeDirectRequest<AuthorizeGatewayPaymentMethodResponse>(uri, "POST", { entityContainerPropertyName: "transaction" }, request);
 	}
 
 	// Auths a previously tokenized payment method (either credit card or gateway) from the passed in payment method id
-	async authorizeTokenizedPaymentMethod(tokenizedPaymentMethodCharge:AuthorizeTokenizedPaymentMethodRequest):Promise<AuthorizeTokenizedPaymentMethodResponse> {
+	async authorizeTokenizedPaymentMethod(tokenizedPaymentMethodAuth:AuthorizeTokenizedPaymentMethodRequest):Promise<AuthorizeTokenizedPaymentMethodResponse> {
 		const uri = "/gateways/authorize";
 
 		const request = {
-			"transaction": tokenizedPaymentMethodCharge,
+			"transaction": tokenizedPaymentMethodAuth,
 		};
 
 		return await this.client.executeDirectRequest<AuthorizeTokenizedPaymentMethodResponse>(uri, "POST", { entityContainerPropertyName: "transaction" }, request);
