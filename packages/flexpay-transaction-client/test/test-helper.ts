@@ -1,4 +1,4 @@
-import { ResponseCode, StorageState, TransactionStatus, TransactionType } from "../src";
+import { StorageState, TransactionType } from "../src";
 
 export function consoleJson(input:unknown) {
 	if (input !== undefined) {
