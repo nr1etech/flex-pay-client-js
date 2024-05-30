@@ -11,6 +11,7 @@ import {
 	VoidRequest, VoidResponse,
 	HealthCheckResponse,
 	RefundRequest, RefundResponse,
+	RefundedPaymentRequest, RefundedPaymentResponse,
 } from ".";
 
 export class FlexPayTransactionClient {
@@ -281,6 +282,16 @@ class Refund {
 		};
 
 		return await this.client.executeDirectRequest<RefundResponse>(uri, "POST", { entityContainerPropertyName: "transaction" }, request);
+	}
+	
+	async refundedPayment(transactionId:string, refund:RefundedPaymentRequest):Promise<RefundedPaymentResponse> {
+		const uri = `/transactions/${encodeURIComponent(transactionId)}/refundedpayment`;
+
+		const request = {
+			"transaction": refund,
+		};
+
+		return await this.client.executeDirectRequest<RefundedPaymentResponse>(uri, "POST", { entityContainerPropertyName: "transaction" }, request);
 	}
 }
 
