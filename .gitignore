@@ -1,3 +1,9 @@
+node_modules
+lib
+
+.ds_store
+thumbs.db
+
 .npmcache
 .idea
 .sw?
@@ -5,7 +11,6 @@
 *.env
 
 # nodeSJ
-node_modules
 
 #Type Script
 #packages/*/lib
@@ -15,8 +20,6 @@ tsconfig.tsbuildinfo
 # VSCode
 .vscode/*
 
-# Mac
-.ds_store
-
 # lerna
 lerna-debug.log
+
