@@ -3,7 +3,7 @@
 	"publishConfig": {
 		"access": "public"
 	},
-	"version": "0.0.1",
+	"version": "0.0.2-alpha.0",
 	"description": "FlexPay Client",
 	"author": "NR1E, Inc.",
 	"homepage": "https://github.com/nr1etech/flex-pay-client-js",
@@ -20,7 +20,7 @@
 	"scripts": {
 		"tsc": "rm -rf ./lib && tsc",
 		"build": "npm run tsc",
-    "clean": "rm -rf ./lib",
+		"clean": "rm -rf ./lib",
 		"lint": "eslint packages/flexpay-transaction-client/src --ext .ts",
 		"test": "jest unit/ --no-verbose --silent --noStackTrace",
 		"test:loud": "jest unit/ --verbose --no-silent --no-noStackTrace",
