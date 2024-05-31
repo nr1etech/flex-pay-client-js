@@ -9,6 +9,10 @@ on:
       - develop
   workflow_dispatch:
 name: ci
+permissions:
+  contents: write
+  pages: write
+  id-token: write
 jobs:
   publish:
     uses: nr1etech/github-workflows/.github/workflows/javascript-library.yml@main
