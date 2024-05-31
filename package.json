@@ -3,7 +3,7 @@
 	"publishConfig": {
 		"access": "public"
 	},
-	"version": "0.1.0-alpha.1",
+	"version": "0.1.0",
 	"description": "FlexPay Client",
 	"author": "NR1E, Inc.",
 	"homepage": "https://github.com/nr1etech/flex-pay-client-js",
